@@ -256,7 +256,8 @@ function showSavedCars() {
         <div style="background:#fff;color:#111827;width:100%;max-width:900px;max-height:92vh;overflow:auto;border-radius:18px;padding:30px;position:relative;">
             <button type="button" id="closeSavedCars" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;">YOUR GARAGE</p>
-            <h2 style="font-size:32px;margin:6px 0 20px;">Saved Cars</h2>
+            <h2 style="font-size:32px;margin:6px 0 8px;">Saved Cars</h2>
+            <p style="color:#6b7280;margin:0 0 20px;">${savedCars.length} saved car${savedCars.length === 1 ? "" : "s"} • ${JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]").length} live listing${JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]").length === 1 ? "" : "s"}</p>
             ${savedCars.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">${savedCars.map(car => `
                 <div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
                     <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100%;height:150px;object-fit:cover;">
@@ -264,7 +265,19 @@ function showSavedCars() {
                         <h3>${car.year} ${car.make} ${car.model}</h3>
                         <p style="color:#e63946;font-weight:800;">${formatUSD(car.price)}</p>
                         <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="width:100%;padding:10px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View Details</button>
-                    </div>
+                        <div style="margin-top:30px;border-top:1px solid #e5e7eb;padding-top:24px;">
+                <h3 style="font-size:22px;margin:0 0 14px;">My Live Listings</h3>
+                ${JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]").length ? `<div style="display:grid;gap:12px;">${JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]").map(listing => `
+                    <div style="display:flex;align-items:center;gap:14px;border:1px solid #e5e7eb;border-radius:12px;padding:12px;">
+                        <img src="${listing.image}" alt="${listing.make} ${listing.model}" style="width:90px;height:65px;object-fit:cover;border-radius:8px;">
+                        <div style="flex:1;">
+                            <strong>${listing.year} ${listing.make} ${listing.model}</strong>
+                            <p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${formatUSD(listing.price)} • ${listing.plan} plan • ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</p>
+                        </div>
+                        <button type="button" class="my-listing-view-btn" data-car-id="${listing.id}" style="padding:9px 12px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
+                    </div>`).join("")}</div>` : `<p style="color:#6b7280;">You haven't published a vehicle yet. Choose a listing plan to get started.</p>`}
+            </div>
+        </div>
                 </div>`).join("")}</div>` : `<div style="text-align:center;padding:40px 10px;color:#6b7280;"><div style="font-size:48px;">♡</div><h3>No saved cars yet</h3><p>Click the heart on a car to save it here.</p></div>`}
         </div>`;
     document.body.appendChild(modal);
@@ -273,6 +286,8 @@ function showSavedCars() {
         if (event.target === modal) modal.remove();
         const view = event.target.closest(".saved-view-btn");
         if (view) { modal.remove(); openCarDetails(view.dataset.carId); }
+        const listingView = event.target.closest(".my-listing-view-btn");
+        if (listingView) { modal.remove(); openCarDetails(listingView.dataset.carId); }
     };
 }
 
