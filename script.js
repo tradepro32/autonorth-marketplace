@@ -47,6 +47,55 @@ const cars = [
         drivetrain: "All-Wheel Drive",
         description: "Low-mileage Tesla Model 3 with electric performance, modern technology and a clean interior."
     }
+    },
+    {
+        id: 4,
+        make: "Honda",
+        model: "CR-V EX",
+        year: 2023,
+        price: 31900,
+        mileage: 22100,
+        transmission: "Automatic",
+        fuel: "Gasoline",
+        location: "USA",
+        city: "Florida",
+        image: "https://images.unsplash.com/photo-1568844293986-ca2e3c6f6c11?auto=format&fit=crop&w=900&q=80",
+        color: "Silver",
+        drivetrain: "All-Wheel Drive",
+        description: "Practical Honda CR-V EX with spacious seating, modern safety features and excellent everyday versatility."
+    },
+    {
+        id: 5,
+        make: "Ford",
+        model: "F-150 XLT",
+        year: 2022,
+        price: 41900,
+        mileage: 36700,
+        transmission: "Automatic",
+        fuel: "Gasoline",
+        location: "USA",
+        city: "Texas",
+        image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=900&q=80",
+        color: "Blue",
+        drivetrain: "Four-Wheel Drive",
+        description: "Capable Ford F-150 XLT pickup with strong towing ability, comfortable cabin and modern features."
+    },
+    {
+        id: 6,
+        make: "Mercedes-Benz",
+        model: "C300",
+        year: 2023,
+        price: 46900,
+        mileage: 18500,
+        transmission: "Automatic",
+        fuel: "Gasoline",
+        location: "Canada",
+        city: "British Columbia",
+        image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=900&q=80",
+        color: "Silver",
+        drivetrain: "Rear-Wheel Drive",
+        description: "Elegant Mercedes-Benz C300 with refined styling, premium comfort and advanced technology."
+    }
 ];
 
 function displayCars(list = cars) {
