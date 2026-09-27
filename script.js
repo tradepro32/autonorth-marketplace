@@ -734,11 +734,22 @@ function showAccount(){
    <label>Full Name<input required name="name" value="${a?.name||""}"></label>
    <label>Email<input required type="email" name="email" value="${a?.email||""}"></label>
    <label>Phone Number<input required type="tel" name="phone" placeholder="+1 555 123 4567" value="${a?.phone||""}" autocomplete="tel"></label>
-   <div class="phone-verification-box">
+   <div class="phone-verification-box" id="phoneVerificationBox">
      <div><strong>Phone verification</strong><span id="phoneStatus">${verified?"✓ Verified":"Not verified"}</span></div>
-     <p>We'll send a 6-digit verification code to your phone.</p>
-     <div class="otp-row"><input id="otpCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" ${verified?"disabled":""}><button type="button" id="sendOtp" class="account-secondary">${verified?"Verified":"Send code"}</button></div>
-     <small id="otpMessage"></small>
+     <p>Enter your phone number above, then we'll send a 6-digit verification code by SMS.</p>
+     <button type="button" id="sendOtp" class="account-secondary">${verified?"Verified":"Send verification code"}</button>
+     <div id="otpArea" style="display:${verified?"block":"none"};margin-top:14px;">
+       <p style="margin:0 0 10px;font-weight:700;">Enter verification code</p>
+       <div class="otp-boxes" style="display:flex;gap:8px;">
+         <input class="otp-digit" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+         <input class="otp-digit" maxlength="1" inputmode="numeric">
+         <input class="otp-digit" maxlength="1" inputmode="numeric">
+         <input class="otp-digit" maxlength="1" inputmode="numeric">
+         <input class="otp-digit" maxlength="1" inputmode="numeric">
+         <input class="otp-digit" maxlength="1" inputmode="numeric">
+       </div>
+       <small id="otpMessage"></small>
+     </div>
    </div>
    <button id="accountSubmit" class="pricing-button pricing-button-red" ${!verified&&!a?"disabled":""}>${a?"Save Account":"Create Account"}</button>
  </form>
@@ -748,31 +759,37 @@ function showAccount(){
  document.body.appendChild(m);
  document.getElementById("closeAccount").onclick=closeAutoNorthModal;
  const phoneInput=document.querySelector("#accountForm input[name='phone']");
- const otpInput=document.getElementById("otpCode");
+ const otpArea=document.getElementById("otpArea");
+ const otpDigits=[...document.querySelectorAll(".otp-digit")];
  const sendOtp=document.getElementById("sendOtp");
  const otpMessage=document.getElementById("otpMessage");
  const submit=document.getElementById("accountSubmit");
  let demoCode="";
  sendOtp.onclick=()=>{
    const phone=phoneInput.value.trim();
-   if(!phone){phoneInput.focus();otpMessage.textContent="Enter your phone number first.";return;}
+   if(!phone){phoneInput.focus();return;}
    demoCode=String(Math.floor(100000+Math.random()*900000));
-   otpMessage.textContent="Demo verification code: "+demoCode;
-   otpMessage.style.color="#e63946";
+   otpArea.style.display="block";
    sendOtp.textContent="Code sent";
-   otpInput.disabled=false;
-   otpInput.focus();
+   otpMessage.textContent="Demo code: "+demoCode;
+   otpMessage.style.color="#e63946";
+   otpDigits[0].focus();
  };
- otpInput?.addEventListener("input",()=>{
-   otpInput.value=otpInput.value.replace(/\D/g,"").slice(0,6);
-   if(otpInput.value.length===6&&otpInput.value===demoCode){
-     const current=getAccount()||{};
-     localStorage.setItem("autonorth_account",JSON.stringify({...current,name:document.querySelector("#accountForm input[name='name']").value,email:document.querySelector("#accountForm input[name='email']").value,phone:phoneInput.value.trim(),phoneVerified:true}));
-     document.getElementById("phoneStatus").textContent="✓ Verified";
-     submit.disabled=false;
-     otpMessage.textContent="Phone number verified successfully.";
-     otpMessage.style.color="#15803d";
-   }
+ otpDigits.forEach((input,index)=>{
+   input.addEventListener("input",()=>{
+     input.value=input.value.replace(/\D/g,"").slice(0,1);
+     if(input.value&&index<otpDigits.length-1) otpDigits[index+1].focus();
+     const entered=otpDigits.map(box=>box.value).join("");
+     if(entered.length===6&&entered===demoCode){
+       const current=getAccount()||{};
+       localStorage.setItem("autonorth_account",JSON.stringify({...current,name:document.querySelector("#accountForm input[name='name']").value,email:document.querySelector("#accountForm input[name='email']").value,phone:phoneInput.value.trim(),phoneVerified:true}));
+       document.getElementById("phoneStatus").textContent="✓ Verified";
+       submit.disabled=false;
+       otpMessage.textContent="Phone number verified successfully.";
+       otpMessage.style.color="#15803d";
+     }
+   });
+   input.addEventListener("keydown",e=>{if(e.key==="Backspace"&&!input.value&&index>0) otpDigits[index-1].focus();});
  });
  document.getElementById("accountForm").onsubmit=e=>{
    e.preventDefault();
