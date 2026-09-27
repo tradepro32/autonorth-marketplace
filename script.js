@@ -216,6 +216,7 @@ document.addEventListener("click", event => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    loadUserListings();
     displayCars();
     const saved = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]");
     document.querySelectorAll(".save-car-btn").forEach(button => {
@@ -260,6 +261,15 @@ function showSavedCars() {
 function closeAutoNorthModal() {
     const modal = document.getElementById("autonorth-modal");
     if (modal) modal.remove();
+}
+
+function loadUserListings() {
+    const savedListings = JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]");
+    savedListings.forEach(listing => {
+        if (!cars.some(car => car.id === listing.id)) {
+            cars.push(listing);
+        }
+    });
 }
 
 function showPricing() {
@@ -356,6 +366,29 @@ function showListingForm(plan = "Basic", planPrice = "19.99") {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const vehicle = Object.fromEntries(formData.entries());
+
+        const newListing = {
+            id: Date.now(),
+            make: vehicle.make,
+            model: vehicle.model,
+            year: Number(vehicle.year),
+            price: Number(vehicle.price),
+            mileage: Number(vehicle.mileage),
+            transmission: vehicle.transmission,
+            fuel: vehicle.fuel,
+            location: vehicle.location,
+            city: vehicle.city,
+            image: vehicle.image || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80",
+            color: "Not specified",
+            drivetrain: "Not specified",
+            description: vehicle.description || "Vehicle listed by an AutoNorth seller."
+        };
+
+        cars.push(newListing);
+        const userListings = JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]");
+        userListings.push(newListing);
+        localStorage.setItem("autonorth_user_listings", JSON.stringify(userListings));
+        displayCars(cars);
 
         closeAutoNorthModal();
 
