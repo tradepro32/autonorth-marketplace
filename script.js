@@ -118,6 +118,7 @@ function displayCars(list = cars) {
                 <p class="car-year">${car.year}</p>
                 <h3>${car.make} ${car.model}</h3>
                 <p class="car-details">${car.mileage.toLocaleString()} miles • ${car.transmission} • ${car.fuel}</p>
+                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${Number(car.planPrice || 0).toFixed(2)}</div>` : ""}
                 <div class="car-bottom">
                     <strong>${car.price.toLocaleString()}</strong>
                     <span>${car.city}, ${car.location}</span>
