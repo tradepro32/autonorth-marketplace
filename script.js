@@ -172,7 +172,7 @@ function openCarDetails(id) {
                         <h2>${car.make} ${car.model}</h2>
                         <p class="vehicle-details-location">${car.city}, ${car.location}</p>
                     </div>
-                    <strong class="vehicle-details-price">$ ${formatUSD(car.price)}</strong>
+                    <strong class="vehicle-details-price">${formatUSD(car.price)}</strong>
                 </div>
 
                 <div class="vehicle-spec-grid">
