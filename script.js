@@ -99,6 +99,14 @@ const cars = [
 
 function formatUSD(value) { return "$" + Number(value || 0).toLocaleString("en-US"); }
 
+function normalizeLocation(value) {
+    const v = String(value || "").trim().toLowerCase();
+    if (v === "united states" || v === "usa" || v === "us" || v === "u.s.a.") return "USA";
+    if (v === "canada" || v === "ca") return "Canada";
+    return String(value || "").trim();
+}
+
+
 function displayCars(list = cars) {
     const grid = document.querySelector(".car-grid");
     if (!grid) return;
@@ -166,7 +174,7 @@ function applyMarketplaceControls() {
     const fuel = document.getElementById("fuelFilter")?.value || "";
     const transmission = document.getElementById("transmissionFilter")?.value || "";
     const sort = document.getElementById("sortCars")?.value || "featured";
-    let results = cars.filter(car => (!make || car.make === make) && (!model || car.model.toLowerCase().includes(model)) && (!price || car.price <= Number(price)) && (!location || (location === "United States" && car.location === "USA") || (location === "Canada" && car.location === "Canada")) && (!fuel || car.fuel === fuel) && (!transmission || car.transmission === transmission));
+    let results = cars.filter(car => (!make || car.make === make) && (!model || car.model.toLowerCase().includes(model)) && (!price || car.price <= Number(price)) && (!location || normalizeLocation(car.location) === normalizeLocation(location)) && (!fuel || car.fuel === fuel) && (!transmission || car.transmission === transmission));
     if (sort === "price-low") results.sort((a,b) => a.price-b.price);
     if (sort === "price-high") results.sort((a,b) => b.price-a.price);
     if (sort === "mileage") results.sort((a,b) => a.mileage-b.mileage);
@@ -333,7 +341,7 @@ function loadUserListings() {
     const savedListings = JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]");
     savedListings.forEach(listing => {
         if (!cars.some(car => car.id === listing.id)) {
-            cars.push(listing);
+            cars.push({...listing, location: normalizeLocation(listing.location)});
         }
     });
 }
@@ -852,7 +860,7 @@ function showEditListingForm(x){
  closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
  m.innerHTML="<div class=\"edit-listing-modal\"><button id=\"closeEdit\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">EDIT LISTING</p><h2>Update your vehicle</h2><form id=\"editForm\" class=\"edit-listing-form\"><label>Make<input required name=\"make\" value=\""+x.make+"\"></label><label>Model<input required name=\"model\" value=\""+x.model+"\"></label><label>Year<input required type=\"number\" name=\"year\" value=\""+x.year+"\"></label><label>Price<input required type=\"number\" name=\"price\" value=\""+x.price+"\"></label><label>Mileage<input required type=\"number\" name=\"mileage\" value=\""+x.mileage+"\"></label><label>Location<select name=\"location\"><option "+(x.location==="United States"?"selected":"")+">United States</option><option "+(x.location==="Canada"?"selected":"")+">Canada</option></select></label><label>City / State / Province<input required name=\"city\" value=\""+x.city+"\"></label><label>Fuel<select name=\"fuel\"><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label><label>Transmission<select name=\"transmission\"><option>Automatic</option><option>Manual</option></select></label><label class=\"full-field\">Photo URL<input name=\"image\" value=\""+x.image+"\"></label><label class=\"full-field\">Description<textarea name=\"description\">"+(x.description||"")+"</textarea></label><button class=\"pricing-button pricing-button-red full-field\">Save Changes</button></form></div>";
  document.body.appendChild(m);document.getElementById("closeEdit").onclick=closeAutoNorthModal;
- document.getElementById("editForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const u={...x,make:d.make,model:d.model,year:Number(d.year),price:Number(d.price),mileage:Number(d.mileage),location:d.location,city:d.city,fuel:d.fuel,transmission:d.transmission,image:d.image||x.image,description:d.description||x.description};const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").map(v=>v.id===x.id?u:v);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(v=>v.id===x.id);if(i>=0)cars[i]=u;displayCars();closeAutoNorthModal();showSellerDashboard();};
+ document.getElementById("editForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const u={...x,make:d.make,model:d.model,year:Number(d.year),price:Number(d.price),mileage:Number(d.mileage),location:normalizeLocation(d.location),city:d.city,fuel:d.fuel,transmission:d.transmission,image:d.image||x.image,description:d.description||x.description};const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").map(v=>v.id===x.id?u:v);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(v=>v.id===x.id);if(i>=0)cars[i]=u;displayCars();closeAutoNorthModal();showSellerDashboard();};
 }
 
 function showContactUs(){
@@ -861,6 +869,7 @@ function showContactUs(){
 }
 
 function showAdminDashboard(){
+ if (localStorage.getItem("autonorth_admin_demo_enabled") !== "true") { console.warn("Admin dashboard is disabled in the public build."); return; }
  closeAutoNorthModal();const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]");const iq=JSON.parse(localStorage.getItem("autonorth_inquiries")||"[]");const cm=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");const a=getAccount();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
  let rows=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatUSD(x.price)+" • "+x.plan+" • Live</span></div><button class=\"dashboard-delete admin-remove\" data-id=\""+x.id+"\">Remove</button></div>").join(""):"<p class=\"empty-dashboard\">No seller listings.</p>";
  let inqs=iq.length?iq.map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" • "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries.</p>";
