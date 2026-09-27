@@ -10,7 +10,7 @@ const cars = [
         fuel: "Gasoline",
         location: "USA",
         city: "Texas",
-        image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=900&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/commons/9/90/CamryAXVA70V089FR23.jpg",
         color: "White",
         drivetrain: "Front-Wheel Drive",
         description: "Well-maintained Toyota Camry SE with excellent fuel economy and a comfortable interior."
@@ -26,7 +26,7 @@ const cars = [
         fuel: "Gasoline",
         location: "Canada",
         city: "Ontario",
-        image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=900&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/commons/f/fa/BMW_330i_%28G20%29_Washington_DC_Metro_Area%2C_USA_%282%29.jpg",
         color: "Black",
         drivetrain: "Rear-Wheel Drive",
         description: "Sporty BMW 330i with premium interior, smooth performance and modern technology."
@@ -42,7 +42,7 @@ const cars = [
         fuel: "Electric",
         location: "USA",
         city: "California",
-        image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=900&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/commons/5/5f/2024_Tesla_Model_3.jpg",
         color: "Red",
         drivetrain: "All-Wheel Drive",
         description: "Low-mileage Tesla Model 3 with electric performance, modern technology and a clean interior."
@@ -58,7 +58,7 @@ const cars = [
         fuel: "Gasoline",
         location: "USA",
         city: "Florida",
-        image: "https://images.unsplash.com/photo-1568844293986-ca2e3c6f6c11?auto=format&fit=crop&w=900&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/commons/8/8c/2023_Honda_CR-V_front_end.jpg",
         color: "Silver",
         drivetrain: "All-Wheel Drive",
         description: "Practical Honda CR-V EX with spacious seating, modern safety features and excellent everyday versatility."
@@ -74,8 +74,8 @@ const cars = [
         fuel: "Gasoline",
         location: "USA",
         city: "Texas",
-        image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=900&q=80",
-        color: "Blue",
+        image: "https://upload.wikimedia.org/wikipedia/commons/7/70/2022_Ford_F-150_XLT_Sonoma_2026.jpg",
+        color: "Black",
         drivetrain: "Four-Wheel Drive",
         description: "Capable Ford F-150 XLT pickup with strong towing ability, comfortable cabin and modern features."
     },
@@ -90,7 +90,7 @@ const cars = [
         fuel: "Gasoline",
         location: "Canada",
         city: "British Columbia",
-        image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=900&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/commons/e/e1/23_Mercedes-Benz_C300_4Matic.jpg",
         color: "Silver",
         drivetrain: "Rear-Wheel Drive",
         description: "Elegant Mercedes-Benz C300 with refined styling, premium comfort and advanced technology."
