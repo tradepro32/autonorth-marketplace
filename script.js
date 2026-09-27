@@ -106,17 +106,20 @@ function displayCars(list = cars) {
         return;
     }
 
-    grid.innerHTML = list.map(car => `
+    grid.innerHTML = list.map(car => {
+        const badge = car.mileage <= 15000 ? "LOW MILEAGE" : car.price >= 45000 ? "PREMIUM" : "EXCELLENT CONDITION";
+        return `
         <article class="car-card" data-car-id="${car.id}" style="cursor:pointer;">
             <div class="car-image">
-                <img src="${car.image}" alt="${car.year} ${car.make} ${car.model}">
+                <img src="${car.image}" alt="${car.year} ${car.make} ${car.model}" loading="lazy">
+                <div class="car-card-badge">${badge}</div>
             </div>
             <div class="car-info">
                 <p class="car-year">${car.year}</p>
                 <h3>${car.make} ${car.model}</h3>
                 <p class="car-details">${car.mileage.toLocaleString()} miles • ${car.transmission} • ${car.fuel}</p>
                 <div class="car-bottom">
-                    <strong>$${car.price.toLocaleString()}</strong>
+                    <strong>${car.price.toLocaleString()}</strong>
                     <span>${car.city}, ${car.location}</span>
                 </div>
                 <div style="display:flex;gap:8px;margin-top:10px;">
@@ -125,7 +128,8 @@ function displayCars(list = cars) {
                 </div>
             </div>
         </article>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function searchCars() {
