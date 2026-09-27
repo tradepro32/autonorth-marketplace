@@ -280,35 +280,70 @@ function showPricing() {
     modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
 
     modal.innerHTML = `
-        <div style="background:#fff;color:#111827;width:100%;max-width:980px;max-height:92vh;overflow:auto;border-radius:18px;padding:32px;position:relative;">
-            <button type="button" id="closePricingModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
-            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">SELL WITH AUTONORTH</p>
-            <h2 style="font-size:34px;margin-bottom:8px;">Choose a listing plan</h2>
-            <p style="color:#6b7280;margin-bottom:25px;">Create your vehicle listing first. Payment processing can be connected when the marketplace backend is ready.</p>
+        <div class="pricing-modal">
+            <button type="button" id="closePricingModal" class="pricing-close" aria-label="Close">×</button>
 
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
-                <div style="border:1px solid #e5e7eb;border-radius:14px;padding:24px;">
-                    <h3>Basic</h3>
-                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$9.99</p>
-                    <p style="color:#6b7280;line-height:1.6;">Standard vehicle listing with essential details and buyer visibility.</p>
-                    <button type="button" class="choose-plan" data-plan="Basic" data-price="9.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Basic</button>
+            <div class="pricing-header">
+                <p class="pricing-eyebrow">SELL WITH AUTONORTH</p>
+                <h2>Choose the right exposure for your car</h2>
+                <p>Simple plans designed to help buyers discover your vehicle. Choose a plan, create your listing, and you're ready for the next step.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-card-top">
+                        <span class="pricing-plan-label">STARTER</span>
+                        <h3>Basic</h3>
+                        <p class="pricing-price">$9.99 <span>per listing</span></p>
+                        <p class="pricing-description">A simple, affordable way to put your vehicle in front of AutoNorth buyers.</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ 1 vehicle listing</li>
+                        <li>✓ Standard search visibility</li>
+                        <li>✓ Vehicle photos & full details</li>
+                        <li>✓ Buyer inquiries</li>
+                        <li>✓ 30-day listing period</li>
+                    </ul>
+                    <button type="button" class="choose-plan pricing-button pricing-button-dark" data-plan="Basic" data-price="9.99">Choose Basic</button>
                 </div>
 
-                <div style="border:2px solid #e63946;border-radius:14px;padding:24px;position:relative;">
-                    <span style="position:absolute;top:-12px;left:20px;background:#e63946;color:white;padding:5px 9px;border-radius:5px;font-size:10px;font-weight:800;">POPULAR</span>
-                    <h3>Featured</h3>
-                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$19.99</p>
-                    <p style="color:#6b7280;line-height:1.6;">More visibility for your vehicle with featured placement.</p>
-                    <button type="button" class="choose-plan" data-plan="Featured" data-price="19.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Choose Featured</button>
+                <div class="pricing-card pricing-card-popular">
+                    <span class="pricing-popular-badge">MOST POPULAR</span>
+                    <div class="pricing-card-top">
+                        <span class="pricing-plan-label">MORE VISIBILITY</span>
+                        <h3>Featured</h3>
+                        <p class="pricing-price">$19.99 <span>per listing</span></p>
+                        <p class="pricing-description">Give your vehicle extra visibility and make it easier for buyers to notice.</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ Everything in Basic</li>
+                        <li>✓ Featured badge on your listing</li>
+                        <li>✓ Priority placement in listings</li>
+                        <li>✓ Extra visibility for your vehicle</li>
+                        <li>✓ 30-day listing period</li>
+                    </ul>
+                    <button type="button" class="choose-plan pricing-button pricing-button-red" data-plan="Featured" data-price="19.99">Choose Featured</button>
                 </div>
 
-                <div style="border:1px solid #e5e7eb;border-radius:14px;padding:24px;">
-                    <h3>Premium</h3>
-                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$29.99</p>
-                    <p style="color:#6b7280;line-height:1.6;">Premium exposure designed for sellers who want maximum visibility.</p>
-                    <button type="button" class="choose-plan" data-plan="Premium" data-price="29.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Premium</button>
+                <div class="pricing-card pricing-card-premium">
+                    <div class="pricing-card-top">
+                        <span class="pricing-plan-label">MAXIMUM EXPOSURE</span>
+                        <h3>Premium</h3>
+                        <p class="pricing-price">$29.99 <span>per listing</span></p>
+                        <p class="pricing-description">For sellers who want their vehicle to stand out with the highest available placement.</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ Everything in Featured</li>
+                        <li>✓ Premium badge & highlighted listing</li>
+                        <li>✓ Top placement for stronger visibility</li>
+                        <li>✓ Maximum marketplace exposure</li>
+                        <li>✓ 60-day listing period</li>
+                    </ul>
+                    <button type="button" class="choose-plan pricing-button pricing-button-dark" data-plan="Premium" data-price="29.99">Choose Premium</button>
                 </div>
             </div>
+
+            <p class="pricing-note">Payment processing will be connected before launch. This current version is a working demo and does not charge you.</p>
         </div>
     `;
 
@@ -319,8 +354,7 @@ function showPricing() {
         if (event.target === modal) closeAutoNorthModal();
     };
 }
-
-function showListingForm(plan = "Basic", planPrice = "19.99") {
+function showListingForm(plan = "Basic", planPrice = "9.99") {
     closeAutoNorthModal();
 
     const modal = document.createElement("div");
