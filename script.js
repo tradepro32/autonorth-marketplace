@@ -289,24 +289,24 @@ function showPricing() {
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
                 <div style="border:1px solid #e5e7eb;border-radius:14px;padding:24px;">
                     <h3>Basic</h3>
-                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$19.99</p>
+                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$9.99</p>
                     <p style="color:#6b7280;line-height:1.6;">Standard vehicle listing with essential details and buyer visibility.</p>
-                    <button type="button" class="choose-plan" data-plan="Basic" data-price="19.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Basic</button>
+                    <button type="button" class="choose-plan" data-plan="Basic" data-price="9.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Basic</button>
                 </div>
 
                 <div style="border:2px solid #e63946;border-radius:14px;padding:24px;position:relative;">
                     <span style="position:absolute;top:-12px;left:20px;background:#e63946;color:white;padding:5px 9px;border-radius:5px;font-size:10px;font-weight:800;">POPULAR</span>
                     <h3>Featured</h3>
-                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$39.99</p>
+                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$19.99</p>
                     <p style="color:#6b7280;line-height:1.6;">More visibility for your vehicle with featured placement.</p>
-                    <button type="button" class="choose-plan" data-plan="Featured" data-price="39.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Choose Featured</button>
+                    <button type="button" class="choose-plan" data-plan="Featured" data-price="19.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Choose Featured</button>
                 </div>
 
                 <div style="border:1px solid #e5e7eb;border-radius:14px;padding:24px;">
                     <h3>Premium</h3>
-                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$69.99</p>
+                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$29.99</p>
                     <p style="color:#6b7280;line-height:1.6;">Premium exposure designed for sellers who want maximum visibility.</p>
-                    <button type="button" class="choose-plan" data-plan="Premium" data-price="69.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Premium</button>
+                    <button type="button" class="choose-plan" data-plan="Premium" data-price="29.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Premium</button>
                 </div>
             </div>
         </div>
