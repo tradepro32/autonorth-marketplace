@@ -460,7 +460,23 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
 
         paymentModal.querySelectorAll(".payment-option").forEach(button => {
             button.onclick = () => {
-                alert(button.dataset.method + " checkout will be connected before launch. This demo does not charge your card.");
+                const checkout = document.createElement("div");
+                checkout.id = "autonorth-modal";
+                checkout.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
+                checkout.innerHTML = `
+                    <div style="background:white;color:#111827;max-width:520px;width:100%;border-radius:18px;padding:30px;text-align:center;">
+                        <div style="font-size:44px;margin-bottom:8px;">🔒</div>
+                        <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;">${button.dataset.method.toUpperCase()}</p>
+                        <h2>Secure checkout</h2>
+                        <p style="color:#6b7280;line-height:1.6;">You selected <strong>${plan}</strong> for <strong>${Number(planPrice).toFixed(2)} USD</strong>.</p>
+                        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin:18px 0;color:#6b7280;font-size:13px;">Payment processing is not connected in this demo. No payment will be taken.</div>
+                        <button type="button" id="backToPayment" style="padding:13px 22px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Back to payment methods</button>
+                    </div>
+                `;
+                document.body.appendChild(checkout);
+                document.getElementById("backToPayment").onclick = () => {
+                    checkout.remove();
+                };
             };
         });
     };
