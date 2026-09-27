@@ -124,6 +124,17 @@
                         <option value="year">Newest Year</option>
                     </select>
                 </label>
+                <label>Fuel
+                    <select id="fuelFilter" onchange="applyMarketplaceControls()">
+                        <option value="">Any Fuel</option>
+                        <option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option>
+                    </select>
+                </label>
+                <label>Transmission
+                    <select id="transmissionFilter" onchange="applyMarketplaceControls()">
+                        <option value="">Any</option><option>Automatic</option><option>Manual</option>
+                    </select>
+                </label>
                 <button class="view-all" type="button" onclick="showAllCars()">
                 View All Cars →
             </button>
@@ -304,7 +315,7 @@
         </p>
 
         <div class="footer-links">
-            <a href="#">Home</a>
+            <a href="#top">Home</a>
             <a href="#cars">Browse Cars</a>
             <a href="#sell">Sell Your Car</a>
             <a href="#contact" onclick="showContactUs(); return false;">Contact</a>
