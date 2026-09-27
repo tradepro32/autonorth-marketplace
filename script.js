@@ -486,13 +486,74 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                         <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;">${button.dataset.method.toUpperCase()}</p>
                         <h2>Secure checkout</h2>
                         <p style="color:#6b7280;line-height:1.6;">You selected <strong>${plan}</strong> for <strong>${Number(planPrice).toFixed(2)} USD</strong>.</p>
-                        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin:18px 0;color:#6b7280;font-size:13px;">Payment processing is not connected in this demo. No payment will be taken.</div>
-                        <button type="button" id="backToPayment" style="padding:13px 22px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Back to payment methods</button>
+                        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin:18px 0;color:#6b7280;font-size:13px;">This is a demo checkout. No real payment will be taken. Click below to simulate a successful payment and publish your listing.</div>
+                        <div class="checkout-process-steps" style="margin:18px 0;">
+                            <span class="done">✓ Vehicle details</span>
+                            <span class="done">✓ Payment</span>
+                            <span class="active">3. Listing live</span>
+                        </div>
+                        <button type="button" id="simulatePayment" style="width:100%;padding:14px 22px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Simulate Secure Payment</button>
+                        <button type="button" id="backToPayment" style="width:100%;margin-top:10px;padding:13px 22px;border:1px solid #d1d5db;border-radius:8px;background:white;color:#111827;font-weight:800;cursor:pointer;">Back to payment methods</button>
                     </div>
                 `;
                 document.body.appendChild(checkout);
+
                 document.getElementById("backToPayment").onclick = () => {
                     checkout.remove();
+                };
+
+                document.getElementById("simulatePayment").onclick = () => {
+                    const savedListings = JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]");
+                    const listingToSave = { ...newListing, paymentMethod: button.dataset.method, paymentStatus: "demo-completed" };
+
+                    const existingIndex = savedListings.findIndex(item => item.id === listingToSave.id);
+                    if (existingIndex === -1) {
+                        savedListings.push(listingToSave);
+                    } else {
+                        savedListings[existingIndex] = listingToSave;
+                    }
+
+                    localStorage.setItem("autonorth_user_listings", JSON.stringify(savedListings));
+
+                    const carIndex = cars.findIndex(item => item.id === listingToSave.id);
+                    if (carIndex === -1) {
+                        cars.push(listingToSave);
+                    } else {
+                        cars[carIndex] = listingToSave;
+                    }
+
+                    displayCars();
+                    checkout.remove();
+
+                    const liveModal = document.createElement("div");
+                    liveModal.id = "autonorth-modal";
+                    liveModal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
+                    liveModal.innerHTML = `
+                        <div style="background:white;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;text-align:center;">
+                            <div style="width:70px;height:70px;border-radius:50%;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;margin:0 auto 14px;">✓</div>
+                            <p style="color:#059669;font-size:12px;font-weight:800;letter-spacing:2px;">LISTING LIVE</p>
+                            <h2 style="font-size:30px;margin:6px 0 10px;">Your listing is live</h2>
+                            <p style="color:#6b7280;line-height:1.6;">${listingToSave.year} ${listingToSave.make} ${listingToSave.model} has been added to the AutoNorth marketplace.</p>
+                            <div class="checkout-process-steps" style="margin:20px 0;">
+                                <span class="done">✓ Vehicle details</span>
+                                <span class="done">✓ Payment</span>
+                                <span class="done">✓ Listing live</span>
+                            </div>
+                            <div style="padding:16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;text-align:left;margin-bottom:18px;">
+                                <strong>${plan} plan</strong>
+                                <span style="float:right;font-weight:800;color:#e63946;">${formatUSD(planPrice)}</span>
+                                <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Payment method: ${button.dataset.method}</p>
+                            </div>
+                            <p style="font-size:12px;color:#6b7280;line-height:1.5;">Demo payment completed successfully. Real payment processing will be connected before launch.</p>
+                            <button type="button" id="finishListing" style="width:100%;padding:14px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">View Marketplace</button>
+                        </div>
+                    `;
+                    document.body.appendChild(liveModal);
+
+                    document.getElementById("finishListing").onclick = () => {
+                        liveModal.remove();
+                        document.getElementById("cars")?.scrollIntoView({ behavior: "smooth" });
+                    };
                 };
             };
         });
