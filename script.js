@@ -721,14 +721,71 @@ console.log("AutoNorth script v12 loaded");
 function getAccount(){return JSON.parse(localStorage.getItem("autonorth_account")||"null");}
 
 function showAccount(){
- closeAutoNorthModal(); const a=getAccount(); const m=document.createElement("div"); m.id="autonorth-modal"; m.className="site-modal";
- m.innerHTML="<div class=\"account-modal\"><button id=\"closeAccount\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">AUTONORTH ACCOUNT</p><h2>"+(a?"Welcome back":"Create your AutoNorth account")+"</h2><p class=\"account-intro\">"+(a?"Manage your profile, listings and inquiries.":"Create a demo account to access your seller dashboard.")+"</p><form id=\"accountForm\" class=\"account-form\"><label>Full Name<input required name=\"name\" value=\""+(a?.name||"")+"\"></label><label>Email<input required type=\"email\" name=\"email\" value=\""+(a?.email||"")+"\"></label><button class=\"pricing-button pricing-button-red\">"+(a?"Save Account":"Create Account")+"</button></form>"+(a?"<div class=\"account-actions\"><button id=\"sellerDashboard\" class=\"account-secondary\">Seller Dashboard</button><button id=\"savedFromAccount\" class=\"account-secondary\">Saved Cars</button><button id=\"logoutAccount\" class=\"account-danger\">Sign Out</button></div>":"")+"<p class=\"account-demo-note\">Demo account only — real authentication will be connected before launch.</p></div>";
- document.body.appendChild(m); document.getElementById("closeAccount").onclick=closeAutoNorthModal;
- document.getElementById("accountForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));localStorage.setItem("autonorth_account",JSON.stringify({name:d.name,email:d.email}));closeAutoNorthModal();showAccount();};
- document.getElementById("sellerDashboard")?.addEventListener("click",()=>{closeAutoNorthModal();showSellerDashboard();}); document.getElementById("savedFromAccount")?.addEventListener("click",()=>{closeAutoNorthModal();showSavedCars();});
+ closeAutoNorthModal();
+ const a=getAccount();
+ const m=document.createElement("div"); m.id="autonorth-modal"; m.className="site-modal";
+ const verified=a?.phoneVerified;
+ m.innerHTML=`<div class="account-modal">
+ <button id="closeAccount" class="pricing-close">×</button>
+ <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
+ <h2>${a?"Welcome back":"Create your AutoNorth account"}</h2>
+ <p class="account-intro">${a?"Manage your profile, listings and inquiries.":"Create your account with phone verification for a more secure marketplace."}</p>
+ <form id="accountForm" class="account-form">
+   <label>Full Name<input required name="name" value="${a?.name||""}"></label>
+   <label>Email<input required type="email" name="email" value="${a?.email||""}"></label>
+   <label>Phone Number<input required type="tel" name="phone" placeholder="+1 555 123 4567" value="${a?.phone||""}" autocomplete="tel"></label>
+   <div class="phone-verification-box">
+     <div><strong>Phone verification</strong><span id="phoneStatus">${verified?"✓ Verified":"Not verified"}</span></div>
+     <p>We'll send a 6-digit verification code to your phone.</p>
+     <div class="otp-row"><input id="otpCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" ${verified?"disabled":""}><button type="button" id="sendOtp" class="account-secondary">${verified?"Verified":"Send code"}</button></div>
+     <small id="otpMessage"></small>
+   </div>
+   <button id="accountSubmit" class="pricing-button pricing-button-red" ${!verified&&!a?"disabled":""}>${a?"Save Account":"Create Account"}</button>
+ </form>
+ ${a?"<div class=\"account-actions\"><button id=\"sellerDashboard\" class=\"account-secondary\">Seller Dashboard</button><button id=\"savedFromAccount\" class=\"account-secondary\">Saved Cars</button><button id=\"logoutAccount\" class=\"account-danger\">Sign Out</button></div>":""}
+ <p class="account-demo-note">Phone verification is currently in demo mode. Before launch, this will connect to an SMS provider to send the code automatically.</p>
+ </div>`;
+ document.body.appendChild(m);
+ document.getElementById("closeAccount").onclick=closeAutoNorthModal;
+ const phoneInput=document.querySelector("#accountForm input[name='phone']");
+ const otpInput=document.getElementById("otpCode");
+ const sendOtp=document.getElementById("sendOtp");
+ const otpMessage=document.getElementById("otpMessage");
+ const submit=document.getElementById("accountSubmit");
+ let demoCode="";
+ sendOtp.onclick=()=>{
+   const phone=phoneInput.value.trim();
+   if(!phone){phoneInput.focus();otpMessage.textContent="Enter your phone number first.";return;}
+   demoCode=String(Math.floor(100000+Math.random()*900000));
+   otpMessage.textContent="Demo verification code: "+demoCode;
+   otpMessage.style.color="#e63946";
+   sendOtp.textContent="Code sent";
+   otpInput.disabled=false;
+   otpInput.focus();
+ };
+ otpInput?.addEventListener("input",()=>{
+   otpInput.value=otpInput.value.replace(/\D/g,"").slice(0,6);
+   if(otpInput.value.length===6&&otpInput.value===demoCode){
+     const current=getAccount()||{};
+     localStorage.setItem("autonorth_account",JSON.stringify({...current,name:document.querySelector("#accountForm input[name='name']").value,email:document.querySelector("#accountForm input[name='email']").value,phone:phoneInput.value.trim(),phoneVerified:true}));
+     document.getElementById("phoneStatus").textContent="✓ Verified";
+     submit.disabled=false;
+     otpMessage.textContent="Phone number verified successfully.";
+     otpMessage.style.color="#15803d";
+   }
+ });
+ document.getElementById("accountForm").onsubmit=e=>{
+   e.preventDefault();
+   const d=Object.fromEntries(new FormData(e.currentTarget));
+   const current=getAccount();
+   if(!current && !otpInput.value || !current && !JSON.parse(localStorage.getItem("autonorth_account")||"null")?.phoneVerified){return;}
+   localStorage.setItem("autonorth_account",JSON.stringify({name:d.name,email:d.email,phone:d.phone,phoneVerified:true}));
+   closeAutoNorthModal(); showAccount();
+ };
+ document.getElementById("sellerDashboard")?.addEventListener("click",()=>{closeAutoNorthModal();showSellerDashboard();});
+ document.getElementById("savedFromAccount")?.addEventListener("click",()=>{closeAutoNorthModal();showSavedCars();});
  document.getElementById("logoutAccount")?.addEventListener("click",()=>{localStorage.removeItem("autonorth_account");closeAutoNorthModal();showAccount();});
 }
-
 function showSellerDashboard(){
  closeAutoNorthModal(); const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]"); const iq=JSON.parse(localStorage.getItem("autonorth_inquiries")||"[]"); const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
  let listings=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatUSD(x.price)+" • "+x.plan+" • "+(x.paymentStatus==="demo-completed"?"Live":"Pending")+"</span></div><button class=\"dashboard-edit\" data-id=\""+x.id+"\">Edit</button><button class=\"dashboard-delete\" data-id=\""+x.id+"\">Delete</button></div>").join(""):"<p class=\"empty-dashboard\">No listings yet.</p>";
