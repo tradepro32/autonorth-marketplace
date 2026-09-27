@@ -367,7 +367,14 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
 
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CREATE YOUR LISTING</p>
             <h2 style="font-size:32px;margin-bottom:5px;">List your car</h2>
-            <p style="color:#6b7280;margin-bottom:22px;">Selected plan: <strong>${plan}</strong> — ${planPrice}</p>
+            <div class="selected-plan-summary">
+                <div>
+                    <span>SELECTED PLAN</span>
+                    <strong>${plan}</strong>
+                </div>
+                <strong class="selected-plan-price">${Number(planPrice).toFixed(2)}</strong>
+            </div>
+            <p class="listing-form-note">Complete your vehicle details below. Your listing will be prepared with the selected visibility plan.</p>
 
             <form id="vehicleListingForm">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
