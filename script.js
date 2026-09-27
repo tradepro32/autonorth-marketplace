@@ -88,16 +88,34 @@ function displayCars(carList = cars) {
                     </p>
 
                     <div class="car-bottom">
-                        <strong>$${car.price.toLocaleString()}</strong>
+                        <strong>${car.price.toLocaleString()}</strong>
                         <span>${car.city}, ${car.location}</span>
                     </div>
+
+                    <button class="view-details-btn" type="button" data-car-id="${car.id}">
+                        View Details
+                    </button>
                 </div>
             </article>
         `;
     }).join("");
 
-    // Car clicks are handled by one document-level listener below.
-    // This also keeps working after search results are re-rendered.
+    carGrid.querySelectorAll(".view-details-btn").forEach(function(button) {
+        button.addEventListener("click", function(event) {
+            event.stopPropagation();
+            openCarDetails(Number(button.dataset.carId));
+        });
+    });
+
+    carGrid.querySelectorAll(".car-card").forEach(function(card) {
+        card.addEventListener("click", function(event) {
+            if (event.target.closest(".view-details-btn")) {
+                return;
+            }
+
+            openCarDetails(Number(card.dataset.carId));
+        });
+    });
 }
 
 
