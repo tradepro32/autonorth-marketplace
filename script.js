@@ -460,6 +460,11 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     <strong style="color:#111827;">Payment security</strong><br>
                     Your payment will be processed by a secure third-party payment provider. AutoNorth will not store your full card number.
                 </div>
+                <div class="checkout-process-steps">
+                    <span class="done">✓ Vehicle details</span>
+                    <span class="active">2. Payment</span>
+                    <span>3. Listing live</span>
+                </div>
                 <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:14px;">Demo checkout — no payment is processed yet.</p>
             </div>
         `;
