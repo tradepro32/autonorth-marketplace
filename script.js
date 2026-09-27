@@ -728,11 +728,12 @@ function showSellerDashboard(){
  let inquiries=iq.length?iq.slice().reverse().map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" • "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries yet.</p>";
  m.innerHTML="<div class=\"dashboard-modal\"><button id=\"closeDashboard\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">SELLER CENTER</p><h2>Seller Dashboard</h2><p class=\"account-intro\">Manage your listings and review buyer inquiries.</p><div class=\"dashboard-stats\"><div><strong>"+ls.length+"</strong><span>Listings</span></div><div><strong>"+ls.filter(x=>x.paymentStatus==="demo-completed").length+"</strong><span>Live</span></div><div><strong>"+iq.length+"</strong><span>Inquiries</span></div></div><div class=\"dashboard-section\"><div class=\"dashboard-section-head\"><h3>My Listings</h3><button id=\"dashboardSell\" class=\"dashboard-small-btn\">+ Sell a Car</button></div>"+listings+"</div><div class=\"dashboard-section\"><h3>Buyer Inquiries</h3>"+inquiries+"</div></div>";
  document.body.appendChild(m);document.getElementById("closeDashboard").onclick=closeAutoNorthModal;document.getElementById("dashboardSell").onclick=()=>{closeAutoNorthModal();showPricing()};
- m.querySelectorAll(".dashboard-delete").forEach(b=>b.onclick=()=>deleteUserListing(Number(b.dataset.id)));
+ m.querySelectorAll(".dashboard-delete").forEach(b=>b.onclick=()=>adminRemoveListing(Number(b.dataset.id)));
  m.querySelectorAll(".dashboard-edit").forEach(b=>b.onclick=()=>{const x=ls.find(v=>v.id===Number(b.dataset.id));if(x){closeAutoNorthModal();showEditListingForm(x);}});
 }
 
 function deleteUserListing(id){const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").filter(x=>x.id!==id);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(x=>x.id===id);if(i>=0)cars.splice(i,1);displayCars();showSellerDashboard();}
+function adminRemoveListing(id){const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").filter(x=>x.id!==id);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(x=>x.id===id);if(i>=0)cars.splice(i,1);displayCars();showAdminDashboard();}
 
 function showEditListingForm(x){
  closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
