@@ -154,24 +154,38 @@ function openCarDetails(id) {
 
     const overlay = document.createElement("div");
     overlay.id = "vehicle-details-overlay";
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
+    overlay.className = "vehicle-details-overlay";
 
     overlay.innerHTML = `
-        <div style="background:white;color:#111;max-width:850px;width:100%;max-height:90vh;overflow:auto;border-radius:16px;padding:25px;position:relative;">
-            <button type="button" id="closeVehicleDetails" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;font-size:25px;cursor:pointer;">×</button>
-            <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100%;height:350px;object-fit:cover;border-radius:10px;">
-            <p style="color:#e63946;font-weight:bold;margin-top:20px;">${car.year}</p>
-            <h2 style="font-size:34px;margin:5px 0;">${car.make} ${car.model}</h2>
-            <h3 style="color:#e63946;">$${car.price.toLocaleString()}</h3>
-            <p><b>Mileage:</b> ${car.mileage.toLocaleString()} miles</p>
-            <p><b>Transmission:</b> ${car.transmission}</p>
-            <p><b>Fuel:</b> ${car.fuel}</p>
-            <p><b>Color:</b> ${car.color}</p>
-            <p><b>Drivetrain:</b> ${car.drivetrain}</p>
-            <p><b>Location:</b> ${car.city}, ${car.location}</p>
-            <h3>Vehicle Description</h3>
-            <p>${car.description}</p>
-            <button type="button" id="contactSellerButton" style="width:100%;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:bold;cursor:pointer;">Contact Seller</button>
+        <div class="vehicle-details-modal">
+            <button type="button" id="closeVehicleDetails" class="vehicle-details-close">×</button>
+
+            <img src="${car.image}" alt="${car.make} ${car.model}" class="vehicle-details-image">
+
+            <div class="vehicle-details-content">
+                <p class="vehicle-details-year">${car.year}</p>
+                <div class="vehicle-details-title-row">
+                    <div>
+                        <h2>${car.make} ${car.model}</h2>
+                        <p class="vehicle-details-location">${car.city}, ${car.location}</p>
+                    </div>
+                    <strong class="vehicle-details-price">$ ${car.price.toLocaleString()}</strong>
+                </div>
+
+                <div class="vehicle-spec-grid">
+                    <div><span>Mileage</span><strong>${car.mileage.toLocaleString()} mi</strong></div>
+                    <div><span>Transmission</span><strong>${car.transmission}</strong></div>
+                    <div><span>Fuel Type</span><strong>${car.fuel}</strong></div>
+                    <div><span>Color</span><strong>${car.color}</strong></div>
+                    <div><span>Drivetrain</span><strong>${car.drivetrain}</strong></div>
+                    <div><span>Condition</span><strong>Excellent</strong></div>
+                </div>
+
+                <h3 class="vehicle-description-title">About this vehicle</h3>
+                <p class="vehicle-details-description">${car.description}</p>
+
+                <button type="button" id="contactSellerButton" class="vehicle-contact-button">Contact Seller</button>
+            </div>
         </div>
     `;
 
