@@ -149,3 +149,141 @@ document.addEventListener("click", event => {
 document.addEventListener("DOMContentLoaded", () => {
     displayCars();
 });
+
+
+function closeAutoNorthModal() {
+    const modal = document.getElementById("autonorth-modal");
+    if (modal) modal.remove();
+}
+
+function showPricing() {
+    closeAutoNorthModal();
+
+    const modal = document.createElement("div");
+    modal.id = "autonorth-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
+
+    modal.innerHTML = `
+        <div style="background:#fff;color:#111827;width:100%;max-width:980px;max-height:92vh;overflow:auto;border-radius:18px;padding:32px;position:relative;">
+            <button type="button" id="closePricingModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
+            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">SELL WITH AUTONORTH</p>
+            <h2 style="font-size:34px;margin-bottom:8px;">Choose a listing plan</h2>
+            <p style="color:#6b7280;margin-bottom:25px;">Create your vehicle listing first. Payment processing can be connected when the marketplace backend is ready.</p>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
+                <div style="border:1px solid #e5e7eb;border-radius:14px;padding:24px;">
+                    <h3>Basic</h3>
+                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$19.99</p>
+                    <p style="color:#6b7280;line-height:1.6;">Standard vehicle listing with essential details and buyer visibility.</p>
+                    <button type="button" class="choose-plan" data-plan="Basic" data-price="19.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Basic</button>
+                </div>
+
+                <div style="border:2px solid #e63946;border-radius:14px;padding:24px;position:relative;">
+                    <span style="position:absolute;top:-12px;left:20px;background:#e63946;color:white;padding:5px 9px;border-radius:5px;font-size:10px;font-weight:800;">POPULAR</span>
+                    <h3>Featured</h3>
+                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$39.99</p>
+                    <p style="color:#6b7280;line-height:1.6;">More visibility for your vehicle with featured placement.</p>
+                    <button type="button" class="choose-plan" data-plan="Featured" data-price="39.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Choose Featured</button>
+                </div>
+
+                <div style="border:1px solid #e5e7eb;border-radius:14px;padding:24px;">
+                    <h3>Premium</h3>
+                    <p style="font-size:30px;font-weight:800;margin:12px 0;">$69.99</p>
+                    <p style="color:#6b7280;line-height:1.6;">Premium exposure designed for sellers who want maximum visibility.</p>
+                    <button type="button" class="choose-plan" data-plan="Premium" data-price="69.99" style="width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Choose Premium</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("closePricingModal").onclick = closeAutoNorthModal;
+    modal.onclick = event => {
+        if (event.target === modal) closeAutoNorthModal();
+    };
+}
+
+function showListingForm(plan = "Basic", planPrice = "19.99") {
+    closeAutoNorthModal();
+
+    const modal = document.createElement("div");
+    modal.id = "autonorth-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
+
+    modal.innerHTML = `
+        <div style="background:#fff;color:#111827;width:100%;max-width:760px;max-height:92vh;overflow:auto;border-radius:18px;padding:30px;position:relative;">
+            <button type="button" id="closeListingModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
+
+            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CREATE YOUR LISTING</p>
+            <h2 style="font-size:32px;margin-bottom:5px;">List your car</h2>
+            <p style="color:#6b7280;margin-bottom:22px;">Selected plan: <strong>${plan}</strong> — ${planPrice}</p>
+
+            <form id="vehicleListingForm">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <label>Make<input required name="make" placeholder="e.g. Toyota" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Model<input required name="model" placeholder="e.g. Camry SE" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Year<input required type="number" min="1980" max="2027" name="year" placeholder="2023" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Price (USD)<input required type="number" min="1" name="price" placeholder="27500" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Mileage<input required type="number" min="0" name="mileage" placeholder="28400" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Location<select required name="location" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"><option value="">Select</option><option>United States</option><option>Canada</option></select></label>
+                    <label>City / State / Province<input required name="city" placeholder="e.g. Texas" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Fuel<select required name="fuel" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"><option value="">Select</option><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label>
+                    <label>Transmission<select required name="transmission" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"><option value="">Select</option><option>Automatic</option><option>Manual</option></select></label>
+                    <label style="grid-column:1/-1;">Photo URL<input name="image" placeholder="https://..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label style="grid-column:1/-1;">Description<textarea name="description" rows="4" placeholder="Tell buyers about the vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea></label>
+                </div>
+                <button type="submit" style="width:100%;margin-top:20px;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;font-size:16px;cursor:pointer;">Continue with ${plan} — ${planPrice}</button>
+                <p style="font-size:12px;color:#6b7280;margin-top:10px;text-align:center;">Demo listing flow: no payment is charged yet.</p>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("closeListingModal").onclick = closeAutoNorthModal;
+    modal.onclick = event => {
+        if (event.target === modal) closeAutoNorthModal();
+    };
+
+    document.getElementById("vehicleListingForm").onsubmit = event => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const vehicle = Object.fromEntries(formData.entries());
+
+        closeAutoNorthModal();
+
+        const confirmation = document.createElement("div");
+        confirmation.id = "autonorth-modal";
+        confirmation.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
+        confirmation.innerHTML = `
+            <div style="background:white;color:#111827;max-width:520px;width:100%;border-radius:18px;padding:32px;text-align:center;">
+                <div style="font-size:48px;margin-bottom:10px;">✓</div>
+                <h2>Listing details saved</h2>
+                <p style="color:#6b7280;line-height:1.6;margin:14px 0 22px;">Your ${vehicle.year} ${vehicle.make} ${vehicle.model} listing is ready for the ${plan} plan. The next production step is connecting secure payment and a database.</p>
+                <button type="button" id="closeConfirmation" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
+            </div>
+        `;
+        document.body.appendChild(confirmation);
+        document.getElementById("closeConfirmation").onclick = closeAutoNorthModal;
+    };
+}
+
+document.addEventListener("click", event => {
+    const planButton = event.target.closest(".choose-plan");
+    if (planButton) {
+        showListingForm(planButton.dataset.plan, planButton.dataset.price);
+        return;
+    }
+
+    if (event.target.closest(".sell-btn") || event.target.closest(".sell-main-btn")) {
+        showPricing();
+        return;
+    }
+
+    const pricingButton = event.target.closest('[onclick="showPricing()"]');
+    if (pricingButton) {
+        event.preventDefault();
+        showPricing();
+    }
+});
