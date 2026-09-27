@@ -145,6 +145,12 @@ function showAllCars() {
     if (model) model.value = "";
     if (price) price.value = "";
     if (location) location.value = "";
+    const fuel = document.getElementById("fuelFilter");
+    const transmission = document.getElementById("transmissionFilter");
+    const sort = document.getElementById("sortCars");
+    if (fuel) fuel.value = "";
+    if (transmission) transmission.value = "";
+    if (sort) sort.value = "featured";
 
     displayCars(cars);
     document.getElementById("cars")?.scrollIntoView({ behavior: "smooth", block: "start" });
