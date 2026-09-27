@@ -378,6 +378,11 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                 <strong class="selected-plan-price">${Number(planPrice).toFixed(2)}</strong>
             </div>
             <p class="listing-form-note">Complete your vehicle details below. Your listing will be prepared with the selected visibility plan.</p>
+            <div class="listing-process-steps">
+                <span class="active">1. Vehicle details</span>
+                <span>2. Payment</span>
+                <span>3. Listing live</span>
+            </div>
 
             <form id="vehicleListingForm">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
