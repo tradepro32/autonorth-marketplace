@@ -150,20 +150,24 @@ function showAllCars() {
     document.getElementById("cars")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function searchCars() {
+function searchCars() { applyMarketplaceControls(); }
+
+function applyMarketplaceControls() {
     const make = document.getElementById("make")?.value || "";
     const model = (document.getElementById("model")?.value || "").toLowerCase().trim();
     const price = document.getElementById("price")?.value || "";
     const location = document.getElementById("location")?.value || "";
-
-    displayCars(cars.filter(car =>
-        (!make || car.make === make) &&
-        (!model || car.model.toLowerCase().includes(model)) &&
-        (!price || car.price <= Number(price)) &&
-        (!location ||
-            (location === "United States" && car.location === "USA") ||
-            (location === "Canada" && car.location === "Canada"))
-    ));
+    const fuel = document.getElementById("fuelFilter")?.value || "";
+    const transmission = document.getElementById("transmissionFilter")?.value || "";
+    const sort = document.getElementById("sortCars")?.value || "featured";
+    let results = cars.filter(car => (!make || car.make === make) && (!model || car.model.toLowerCase().includes(model)) && (!price || car.price <= Number(price)) && (!location || (location === "United States" && car.location === "USA") || (location === "Canada" && car.location === "Canada")) && (!fuel || car.fuel === fuel) && (!transmission || car.transmission === transmission));
+    if (sort === "price-low") results.sort((a,b) => a.price-b.price);
+    if (sort === "price-high") results.sort((a,b) => b.price-a.price);
+    if (sort === "mileage") results.sort((a,b) => a.mileage-b.mileage);
+    if (sort === "year") results.sort((a,b) => b.year-a.year);
+    if (sort === "featured") results.sort((a,b) => (b.plan === "Premium")-(a.plan === "Premium") || (b.plan === "Featured")-(a.plan === "Featured"));
+    displayCars(results);
+    document.getElementById("cars")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function openCarDetails(id) {
@@ -630,6 +634,9 @@ function showContactSellerForm(car) {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         const name = form.get("name");
+        const inquiries = JSON.parse(localStorage.getItem("autonorth_inquiries") || "[]");
+        inquiries.push({id:Date.now(),carId:car.id,vehicle:car.year+" "+car.make+" "+car.model,name:String(name),email:String(form.get("email")),message:String(form.get("message")),createdAt:new Date().toISOString(),status:"New"});
+        localStorage.setItem("autonorth_inquiries", JSON.stringify(inquiries));
         overlay.querySelector("div").innerHTML = `
             <div style="text-align:center;padding:15px;">
                 <div style="font-size:48px;margin-bottom:10px;">✓</div>
@@ -691,4 +698,53 @@ window.showAllCars = showAllCars;
 window.openCarDetails = openCarDetails;
 window.showContactSellerForm = showContactSellerForm;
 window.showSavedCars = showSavedCars;
-console.log("AutoNorth script v11 loaded");
+window.showAccount = showAccount;
+window.showSellerDashboard = showSellerDashboard;
+window.showContactUs = showContactUs;
+window.showAdminDashboard = showAdminDashboard;
+window.applyMarketplaceControls = applyMarketplaceControls;
+console.log("AutoNorth script v12 loaded");
+
+function getAccount(){return JSON.parse(localStorage.getItem("autonorth_account")||"null");}
+
+function showAccount(){
+ closeAutoNorthModal(); const a=getAccount(); const m=document.createElement("div"); m.id="autonorth-modal"; m.className="site-modal";
+ m.innerHTML="<div class=\"account-modal\"><button id=\"closeAccount\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">AUTONORTH ACCOUNT</p><h2>"+(a?"Welcome back":"Create your AutoNorth account")+"</h2><p class=\"account-intro\">"+(a?"Manage your profile, listings and inquiries.":"Create a demo account to access your seller dashboard.")+"</p><form id=\"accountForm\" class=\"account-form\"><label>Full Name<input required name=\"name\" value=\""+(a?.name||"")+"\"></label><label>Email<input required type=\"email\" name=\"email\" value=\""+(a?.email||"")+"\"></label><button class=\"pricing-button pricing-button-red\">"+(a?"Save Account":"Create Account")+"</button></form>"+(a?"<div class=\"account-actions\"><button id=\"sellerDashboard\" class=\"account-secondary\">Seller Dashboard</button><button id=\"savedFromAccount\" class=\"account-secondary\">Saved Cars</button><button id=\"logoutAccount\" class=\"account-danger\">Sign Out</button></div>":"")+"<p class=\"account-demo-note\">Demo account only — real authentication will be connected before launch.</p></div>";
+ document.body.appendChild(m); document.getElementById("closeAccount").onclick=closeAutoNorthModal;
+ document.getElementById("accountForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));localStorage.setItem("autonorth_account",JSON.stringify({name:d.name,email:d.email}));closeAutoNorthModal();showAccount();};
+ document.getElementById("sellerDashboard")?.addEventListener("click",()=>{closeAutoNorthModal();showSellerDashboard();}); document.getElementById("savedFromAccount")?.addEventListener("click",()=>{closeAutoNorthModal();showSavedCars();});
+ document.getElementById("logoutAccount")?.addEventListener("click",()=>{localStorage.removeItem("autonorth_account");closeAutoNorthModal();showAccount();});
+}
+
+function showSellerDashboard(){
+ closeAutoNorthModal(); const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]"); const iq=JSON.parse(localStorage.getItem("autonorth_inquiries")||"[]"); const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
+ let listings=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatUSD(x.price)+" • "+x.plan+" • "+(x.paymentStatus==="demo-completed"?"Live":"Pending")+"</span></div><button class=\"dashboard-edit\" data-id=\""+x.id+"\">Edit</button><button class=\"dashboard-delete\" data-id=\""+x.id+"\">Delete</button></div>").join(""):"<p class=\"empty-dashboard\">No listings yet.</p>";
+ let inquiries=iq.length?iq.slice().reverse().map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" • "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries yet.</p>";
+ m.innerHTML="<div class=\"dashboard-modal\"><button id=\"closeDashboard\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">SELLER CENTER</p><h2>Seller Dashboard</h2><p class=\"account-intro\">Manage your listings and review buyer inquiries.</p><div class=\"dashboard-stats\"><div><strong>"+ls.length+"</strong><span>Listings</span></div><div><strong>"+ls.filter(x=>x.paymentStatus==="demo-completed").length+"</strong><span>Live</span></div><div><strong>"+iq.length+"</strong><span>Inquiries</span></div></div><div class=\"dashboard-section\"><div class=\"dashboard-section-head\"><h3>My Listings</h3><button id=\"dashboardSell\" class=\"dashboard-small-btn\">+ Sell a Car</button></div>"+listings+"</div><div class=\"dashboard-section\"><h3>Buyer Inquiries</h3>"+inquiries+"</div></div>";
+ document.body.appendChild(m);document.getElementById("closeDashboard").onclick=closeAutoNorthModal;document.getElementById("dashboardSell").onclick=()=>{closeAutoNorthModal();showPricing()};
+ m.querySelectorAll(".dashboard-delete").forEach(b=>b.onclick=()=>deleteUserListing(Number(b.dataset.id)));
+ m.querySelectorAll(".dashboard-edit").forEach(b=>b.onclick=()=>{const x=ls.find(v=>v.id===Number(b.dataset.id));if(x){closeAutoNorthModal();showEditListingForm(x);}});
+}
+
+function deleteUserListing(id){const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").filter(x=>x.id!==id);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(x=>x.id===id);if(i>=0)cars.splice(i,1);displayCars();showSellerDashboard();}
+
+function showEditListingForm(x){
+ closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
+ m.innerHTML="<div class=\"edit-listing-modal\"><button id=\"closeEdit\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">EDIT LISTING</p><h2>Update your vehicle</h2><form id=\"editForm\" class=\"edit-listing-form\"><label>Make<input required name=\"make\" value=\""+x.make+"\"></label><label>Model<input required name=\"model\" value=\""+x.model+"\"></label><label>Year<input required type=\"number\" name=\"year\" value=\""+x.year+"\"></label><label>Price<input required type=\"number\" name=\"price\" value=\""+x.price+"\"></label><label>Mileage<input required type=\"number\" name=\"mileage\" value=\""+x.mileage+"\"></label><label>Location<select name=\"location\"><option "+(x.location==="United States"?"selected":"")+">United States</option><option "+(x.location==="Canada"?"selected":"")+">Canada</option></select></label><label>City / State / Province<input required name=\"city\" value=\""+x.city+"\"></label><label>Fuel<select name=\"fuel\"><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label><label>Transmission<select name=\"transmission\"><option>Automatic</option><option>Manual</option></select></label><label class=\"full-field\">Photo URL<input name=\"image\" value=\""+x.image+"\"></label><label class=\"full-field\">Description<textarea name=\"description\">"+(x.description||"")+"</textarea></label><button class=\"pricing-button pricing-button-red full-field\">Save Changes</button></form></div>";
+ document.body.appendChild(m);document.getElementById("closeEdit").onclick=closeAutoNorthModal;
+ document.getElementById("editForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const u={...x,make:d.make,model:d.model,year:Number(d.year),price:Number(d.price),mileage:Number(d.mileage),location:d.location,city:d.city,fuel:d.fuel,transmission:d.transmission,image:d.image||x.image,description:d.description||x.description};const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").map(v=>v.id===x.id?u:v);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(v=>v.id===x.id);if(i>=0)cars[i]=u;displayCars();closeAutoNorthModal();showSellerDashboard();};
+}
+
+function showContactUs(){
+ closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";m.innerHTML="<div class=\"contact-modal\"><button id=\"closeContact\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">CONTACT AUTONORTH</p><h2>How can we help?</h2><p class=\"account-intro\">Send the AutoNorth team a message. This demo saves it locally.</p><form id=\"contactForm\" class=\"account-form\"><label>Name<input required name=\"name\"></label><label>Email<input required type=\"email\" name=\"email\"></label><label>Message<textarea required name=\"message\" rows=\"5\"></textarea></label><button class=\"pricing-button pricing-button-red\">Send Message</button></form></div>";document.body.appendChild(m);document.getElementById("closeContact").onclick=closeAutoNorthModal;
+ document.getElementById("contactForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const a=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");a.push({id:Date.now(),...d,createdAt:new Date().toISOString()});localStorage.setItem("autonorth_contact_messages",JSON.stringify(a));m.querySelector(".contact-modal").innerHTML="<div class=\"contact-success\"><div>✓</div><h2>Message received</h2><p>Thanks, "+d.name+". Your message has been saved in this demo.</p><button id=\"contactDone\" class=\"pricing-button pricing-button-dark\">Done</button></div>";document.getElementById("contactDone").onclick=closeAutoNorthModal;};
+}
+
+function showAdminDashboard(){
+ closeAutoNorthModal();const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]");const iq=JSON.parse(localStorage.getItem("autonorth_inquiries")||"[]");const cm=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");const a=getAccount();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
+ let rows=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatUSD(x.price)+" • "+x.plan+" • Live</span></div><button class=\"dashboard-delete admin-remove\" data-id=\""+x.id+"\">Remove</button></div>").join(""):"<p class=\"empty-dashboard\">No seller listings.</p>";
+ let inqs=iq.length?iq.map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" • "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries.</p>";
+ let msgs=cm.length?cm.map(x=>"<div class=\"inquiry-card\"><strong>"+x.name+"</strong><span>"+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No contact messages.</p>";
+ m.innerHTML="<div class=\"dashboard-modal admin-dashboard\"><button id=\"closeAdmin\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">ADMIN DEMO</p><h2>AutoNorth Admin Dashboard</h2><p class=\"account-intro\">Demo management tools. Real server-side admin security is required before launch.</p><div class=\"dashboard-stats\"><div><strong>"+cars.length+"</strong><span>Cars</span></div><div><strong>"+ls.length+"</strong><span>Seller Listings</span></div><div><strong>"+(a?1:0)+"</strong><span>Demo Users</span></div><div><strong>"+(iq.length+cm.length)+"</strong><span>Messages</span></div></div><div class=\"dashboard-section\"><h3>Seller Listings</h3>"+rows+"</div><div class=\"dashboard-section\"><h3>Buyer Inquiries</h3>"+inqs+"</div><div class=\"dashboard-section\"><h3>Contact Messages</h3>"+msgs+"</div></div>";
+ document.body.appendChild(m);document.getElementById("closeAdmin").onclick=closeAutoNorthModal;m.querySelectorAll(".admin-remove").forEach(b=>b.onclick=()=>deleteUserListing(Number(b.dataset.id)));
+}
