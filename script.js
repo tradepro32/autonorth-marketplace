@@ -265,47 +265,63 @@ function showSavedCars() {
     modal.id = "autonorth-modal";
     modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
     modal.innerHTML = `
-        <div style="background:#fff;color:#111827;width:100%;max-width:900px;max-height:92vh;overflow:auto;border-radius:18px;padding:30px;position:relative;">
-            <button type="button" id="closeSavedCars" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
-            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;">YOUR GARAGE</p>
-            <h2 style="font-size:32px;margin:6px 0 8px;">Saved Cars</h2>
-            <p style="color:#6b7280;margin:0 0 24px;">${savedCars.length} saved car${savedCars.length === 1 ? "" : "s"} • ${listings.length} live listing${listings.length === 1 ? "" : "s"}</p>
+        <div style="background:#fff;color:#111827;width:100%;max-width:1050px;max-height:92vh;overflow:auto;border-radius:20px;padding:32px;position:relative;">
+            <button type="button" id="closeSavedCars" style="position:absolute;right:18px;top:18px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
 
-            <section>
-                <h3 style="font-size:22px;margin:0 0 14px;">Saved Cars</h3>
-                ${savedCars.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">${savedCars.map(car => `
-                    <div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-                        <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100%;height:150px;object-fit:cover;">
-                        <div style="padding:16px;">
-                            <h3 style="margin:0 0 8px;">${car.year} ${car.make} ${car.model}</h3>
-                            <p style="color:#e63946;font-weight:800;margin:0 0 12px;">${formatUSD(car.price)}</p>
-                            <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="width:100%;padding:10px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View Details</button>
-                        </div>
-                    </div>`).join("")}</div>` : `<div style="text-align:center;padding:30px 10px;color:#6b7280;border:1px dashed #d1d5db;border-radius:14px;"><div style="font-size:42px;">♡</div><h3>No saved cars yet</h3><p>Click the heart on a car to save it here.</p></div>`}
-            </section>
+            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin:0 0 6px;">YOUR GARAGE</p>
+            <h2 style="font-size:32px;margin:0 0 8px;">My Garage</h2>
+            <p style="color:#6b7280;margin:0 0 28px;">Manage cars you've saved and vehicles you've listed.</p>
 
-            <section style="margin-top:30px;border-top:1px solid #e5e7eb;padding-top:24px;">
-                <h3 style="font-size:22px;margin:0 0 14px;">My Live Listings</h3>
-                ${listings.length ? `<div style="display:grid;gap:12px;">${listings.map(listing => `
-                    <div style="display:flex;align-items:center;gap:14px;border:1px solid #e5e7eb;border-radius:12px;padding:12px;">
-                        <img src="${listing.image}" alt="${listing.make} ${listing.model}" style="width:90px;height:65px;object-fit:cover;border-radius:8px;">
-                        <div style="flex:1;">
-                            <strong>${listing.year} ${listing.make} ${listing.model}</strong>
-                            <p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${formatUSD(listing.price)} • ${listing.plan} plan • ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
+
+                <section style="border:1px solid #e5e7eb;border-radius:16px;padding:22px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+                        <div>
+                            <p style="color:#e63946;font-size:11px;font-weight:800;letter-spacing:1.5px;margin:0 0 4px;">BUYER</p>
+                            <h3 style="font-size:22px;margin:0;">Saved Cars</h3>
                         </div>
-                        <button type="button" class="my-listing-view-btn" data-car-id="${listing.id}" style="padding:9px 12px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
-                    </div>`).join("")}</div>` : `<p style="color:#6b7280;">You haven't published a vehicle yet. Choose a listing plan to get started.</p>`}
-            </section>
+                        <span style="background:#f3f4f6;border-radius:20px;padding:6px 11px;font-size:13px;font-weight:700;">${savedCars.length}</span>
+                    </div>
+                    ${savedCars.length ? `<div style="display:grid;gap:14px;">${savedCars.map(car => `
+                        <div style="display:flex;gap:12px;border:1px solid #e5e7eb;border-radius:12px;padding:10px;align-items:center;">
+                            <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100px;height:72px;object-fit:cover;border-radius:9px;">
+                            <div style="flex:1;min-width:0;">
+                                <strong style="display:block;">${car.year} ${car.make} ${car.model}</strong>
+                                <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatUSD(car.price)}</span>
+                                <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${car.city}, ${car.location}</span>
+                            </div>
+                            <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
+                        </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">♡</div><strong>No saved cars yet</strong><p style="margin:6px 0 0;font-size:13px;">Save a car from the marketplace to find it here.</p></div>`}
+                </section>
+
+                <section style="border:1px solid #e5e7eb;border-radius:16px;padding:22px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+                        <div>
+                            <p style="color:#e63946;font-size:11px;font-weight:800;letter-spacing:1.5px;margin:0 0 4px;">SELLER</p>
+                            <h3 style="font-size:22px;margin:0;">My Live Listings</h3>
+                        </div>
+                        <span style="background:#f3f4f6;border-radius:20px;padding:6px 11px;font-size:13px;font-weight:700;">${listings.length}</span>
+                    </div>
+                    ${listings.length ? `<div style="display:grid;gap:14px;">${listings.map(listing => `
+                        <div style="display:flex;gap:12px;border:1px solid #e5e7eb;border-radius:12px;padding:10px;align-items:center;">
+                            <img src="${listing.image}" alt="${listing.make} ${listing.model}" style="width:100px;height:72px;object-fit:cover;border-radius:9px;">
+                            <div style="flex:1;min-width:0;">
+                                <strong style="display:block;">${listing.year} ${listing.make} ${listing.model}</strong>
+                                <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatUSD(listing.price)}</span>
+                                <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${listing.plan} • ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</span>
+                            </div>
+                            <button type="button" class="my-listing-view-btn" data-car-id="${listing.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
+                        </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">🚗</div><strong>No listings yet</strong><p style="margin:6px 0 0;font-size:13px;">Choose a seller plan to publish your vehicle.</p></div>`}
+                </section>
+            </div>
         </div>`;
     document.body.appendChild(modal);
 
     document.getElementById("closeSavedCars").onclick = () => modal.remove();
     modal.onclick = event => {
         if (event.target === modal) modal.remove();
-        const view = event.target.closest(".saved-view-btn");
+        const view = event.target.closest(".saved-view-btn,.my-listing-view-btn");
         if (view) { modal.remove(); openCarDetails(view.dataset.carId); }
-        const listingView = event.target.closest(".my-listing-view-btn");
-        if (listingView) { modal.remove(); openCarDetails(listingView.dataset.carId); }
     };
 }
 function closeAutoNorthModal() {
