@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AutoNorth | Buy & Sell Cars</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <header class="navbar">
+        <div class="logo">
+            Auto<span>North</span>
+        </div>
+
+        <nav>
+            <a href="#">Home</a>
+            <a href="#cars">Browse Cars</a>
+            <a href="#sell">Sell Your Car</a>
+            <a href="#about">About</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button class="login-btn">Log In</button>
+            <button class="sell-btn">Sell Your Car</button>
+        </div>
+    </header>
+
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <p class="hero-label">USA 🇺🇸 & CANADA 🇨🇦</p>
+
+            <h1>
+                Find Your<br>
+                <span>Next Car.</span>
+            </h1>
+
+            <p class="hero-text">
+                Discover thousands of vehicles from trusted sellers
+                across the USA and Canada.
+            </p>
+
+            <!-- SEARCH BOX -->
+            <div class="search-box">
+
+                <div class="search-field">
+                    <label>Make</label>
+                    <select id="make">
+                        <option value="">Any Make</option>
+                        <option>Toyota</option>
+                        <option>Honda</option>
+                        <option>Ford</option>
+                        <option>Chevrolet</option>
+                        <option>BMW</option>
+                        <option>Mercedes-Benz</option>
+                        <option>Tesla</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label>Model</label>
+                    <input
+                        type="text"
+                        id="model"
+                        placeholder="e.g. Camry"
+                    >
+                </div>
+
+                <div class="search-field">
+                    <label>Price</label>
+                    <select id="price">
+                        <option value="">Any Price</option>
+                        <option value="25000">Under $25,000</option>
+                        <option value="50000">Under $50,000</option>
+                        <option value="75000">Under $75,000</option>
+                        <option value="100000">Under $100,000</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label>Location</label>
+                    <select id="location">
+                        <option value="">USA & Canada</option>
+                        <option>United States</option>
+                        <option>Canada</option>
+                    </select>
+                </div>
+
+                <button class="search-btn" onclick="searchCars()">
+                    Search
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FEATURED CARS -->
+    <section class="cars-section" id="cars">
+
+        <div class="section-heading">
+            <div>
+                <p class="section-label">EXPLORE</p>
+                <h2>Featured Vehicles</h2>
+            </div>
+
+            <button class="view-all">
+                View All Cars →
+            </button>
+        </div>
+
+
+        <div class="car-grid">
+
+            <!-- CAR 1 -->
+            <article class="car-card">
+
+                <div class="car-image">
+                    <img
+                        src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=900&q=80"
+                        alt="Toyota Camry"
+                    >
+
+                    <span class="featured-tag">FEATURED</span>
+
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="car-info">
+
+                    <p class="car-year">2023</p>
+
+                    <h3>Toyota Camry SE</h3>
+
+                    <p class="car-details">
+                        28,400 miles • Automatic • Gasoline
+                    </p>
+
+                    <div class="car-bottom">
+
+                        <strong>$27,500</strong>
+
+                        <span>Texas, USA</span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- CAR 2 -->
+            <article class="car-card">
+
+                <div class="car-image">
+                    <img
+                        src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=900&q=80"
+                        alt="BMW 3 Series"
+                    >
+
+                    <span class="featured-tag">FEATURED</span>
+
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="car-info">
+
+                    <p class="car-year">2022</p>
+
+                    <h3>BMW 330i</h3>
+
+                    <p class="car-details">
+                        31,200 miles • Automatic • Gasoline
+                    </p>
+
+                    <div class="car-bottom">
+
+                        <strong>$34,900</strong>
+
+                        <span>Ontario, Canada</span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- CAR 3 -->
+            <article class="car-card">
+
+                <div class="car-image">
+                    <img
+                        src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=900&q=80"
+                        alt="Tesla Model 3"
+                    >
+
+                    <span class="featured-tag">FEATURED</span>
+
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="car-info">
+
+                    <p class="car-year">2024</p>
+
+                    <h3>Tesla Model 3</h3>
+
+                    <p class="car-details">
+                        12,800 miles • Automatic • Electric
+                    </p>
+
+                    <div class="car-bottom">
+
+                        <strong>$38,500</strong>
+
+                        <span>California, USA</span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- SELL YOUR CAR -->
+    <section class="sell-section" id="sell">
+
+        <div class="sell-content">
+
+            <p class="section-label">SELL WITH AUTONORTH</p>
+
+            <h2>
+                Turn Your Car<br>
+                Into Cash.
+            </h2>
+
+            <p>
+                Reach thousands of potential buyers across the
+                USA and Canada. Create your listing in minutes.
+            </p>
+
+            <button class="sell-main-btn">
+                List Your Car →
+            </button>
+
+        </div>
+
+        <div class="sell-box">
+
+            <div class="sell-icon">🚗</div>
+
+            <h3>Ready to sell?</h3>
+
+            <p>
+                Choose a listing package and get your vehicle
+                in front of serious buyers.
+            </p>
+
+            <button onclick="showPricing()">
+                View Listing Plans
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer id="about">
+
+        <div class="footer-logo">
+            Auto<span>North</span>
+        </div>
+
+        <p>
+            The marketplace for buying and selling vehicles
+            across the USA and Canada.
+        </p>
+
+        <div class="footer-links">
+            <a href="#">Home</a>
+            <a href="#cars">Browse Cars</a>
+            <a href="#sell">Sell Your Car</a>
+            <a href="#">Contact</a>
+        </div>
+
+        <p class="copyright">
+            © 2026 AutoNorth. All rights reserved.
+        </p>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
