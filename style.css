@@ -217,8 +217,27 @@ nav a:hover {
 .section-heading {
     display: flex;
     justify-content: space-between;
-    align-items: end;
+    align-items: flex-start;
+    gap: 25px;
     margin-bottom: 35px;
+}
+
+.section-heading > div:first-child {
+    flex: 1;
+}
+
+.section-heading h2 {
+    margin: 0;
+}
+
+.marketplace-tools {
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+
+.marketplace-tools .view-all {
+    margin-top: 25px;
+    white-space: nowrap;
 }
 
 .section-label {
