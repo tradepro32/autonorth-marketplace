@@ -237,6 +237,9 @@ function openCarDetails(id) {
 }
 
 document.addEventListener("click", event => {
+    // Save buttons have their own delegated handler below; never open the car details modal for them.
+    if (event.target.closest(".save-car-btn")) return;
+
     const button = event.target.closest(".view-details-btn");
     if (button) {
         event.preventDefault();
