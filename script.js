@@ -127,7 +127,7 @@ function openCarDetails(id) {
         if (event.target === overlay) overlay.remove();
     };
     document.getElementById("contactSellerButton").onclick = () => {
-        alert("Seller contact feature coming next.");
+        showContactSellerForm(car);
     };
 }
 
@@ -268,6 +268,59 @@ function showListingForm(plan = "Basic", planPrice = "19.99") {
         document.getElementById("closeConfirmation").onclick = closeAutoNorthModal;
     };
 }
+
+function showContactSellerForm(car) {
+    const existing = document.getElementById("seller-contact-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "seller-contact-overlay";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000000;display:flex;align-items:center;justify-content:center;padding:20px;";
+
+    overlay.innerHTML = `
+        <div style="background:#fff;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;position:relative;">
+            <button type="button" id="closeSellerContact" aria-label="Close" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;font-size:24px;cursor:pointer;">×</button>
+            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CONTACT SELLER</p>
+            <h2 style="margin-bottom:6px;">Ask about the ${car.year} ${car.make} ${car.model}</h2>
+            <p style="color:#6b7280;margin-bottom:20px;">Send an inquiry about this vehicle.</p>
+            <form id="sellerContactForm">
+                <label style="display:block;margin-bottom:14px;">Your Name
+                    <input required name="name" placeholder="Your name" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;">
+                </label>
+                <label style="display:block;margin-bottom:14px;">Email
+                    <input required type="email" name="email" placeholder="you@example.com" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;">
+                </label>
+                <label style="display:block;margin-bottom:14px;">Message
+                    <textarea required name="message" rows="4" placeholder="I'm interested in this vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea>
+                </label>
+                <button type="submit" style="width:100%;padding:14px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Send Inquiry</button>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById("closeSellerContact").onclick = () => overlay.remove();
+    overlay.onclick = event => {
+        if (event.target === overlay) overlay.remove();
+    };
+
+    document.getElementById("sellerContactForm").onsubmit = event => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const name = form.get("name");
+        overlay.querySelector("div").innerHTML = `
+            <div style="text-align:center;padding:15px;">
+                <div style="font-size:48px;margin-bottom:10px;">✓</div>
+                <h2>Inquiry sent</h2>
+                <p style="color:#6b7280;line-height:1.6;">Thanks, ${name}. Your inquiry for the ${car.year} ${car.make} ${car.model} has been prepared. Seller messaging can be connected to the backend next.</p>
+                <button type="button" id="finishSellerContact" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
+            </div>
+        `;
+        document.getElementById("finishSellerContact").onclick = () => overlay.remove();
+    };
+}
+
 
 document.addEventListener("click", event => {
     const planButton = event.target.closest(".choose-plan");
