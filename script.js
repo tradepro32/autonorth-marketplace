@@ -71,7 +71,10 @@ function displayCars(list = cars) {
                     <strong>$${car.price.toLocaleString()}</strong>
                     <span>${car.city}, ${car.location}</span>
                 </div>
-                <button type="button" class="view-details-btn" data-car-id="${car.id}">View Details</button>
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                    <button type="button" class="view-details-btn" data-car-id="${car.id}" style="flex:1;">View Details</button>
+                    <button type="button" class="save-car-btn" data-car-id="${car.id}" aria-label="Save car" style="width:48px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:22px;cursor:pointer;">♡</button>
+                </div>
             </div>
         </article>
     `).join("");
@@ -148,6 +151,13 @@ document.addEventListener("click", event => {
 
 document.addEventListener("DOMContentLoaded", () => {
     displayCars();
+    const saved = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]");
+    document.querySelectorAll(".save-car-btn").forEach(button => {
+        if (saved.includes(Number(button.dataset.carId))) {
+            button.textContent = "♥";
+            button.style.color = "#e63946";
+        }
+    });
 });
 
 
@@ -323,6 +333,26 @@ function showContactSellerForm(car) {
 
 
 document.addEventListener("click", event => {
+    const saveButton = event.target.closest(".save-car-btn");
+    if (saveButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const carId = Number(saveButton.dataset.carId);
+        const saved = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]");
+        const index = saved.indexOf(carId);
+        if (index === -1) {
+            saved.push(carId);
+            saveButton.textContent = "♥";
+            saveButton.style.color = "#e63946";
+        } else {
+            saved.splice(index, 1);
+            saveButton.textContent = "♡";
+            saveButton.style.color = "";
+        }
+        localStorage.setItem("autonorth_saved_cars", JSON.stringify(saved));
+        return;
+    }
+
     const planButton = event.target.closest(".choose-plan");
     if (planButton) {
         showListingForm(planButton.dataset.plan, planButton.dataset.price);
