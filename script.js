@@ -96,12 +96,8 @@ function displayCars(carList = cars) {
         `;
     }).join("");
 
-    document.querySelectorAll(".car-card").forEach(function(card) {
-        card.addEventListener("click", function() {
-            const carId = Number(card.dataset.carId);
-            openCarDetails(carId);
-        });
-    });
+    // Car clicks are handled by one document-level listener below.
+    // This also keeps working after search results are re-rendered.
 }
 
 
@@ -243,6 +239,24 @@ function openCarDetails(carId) {
     });
 }
 
+
+document.addEventListener("click", function(event) {
+    const card = event.target.closest(".car-card");
+
+    if (!card) {
+        return;
+    }
+
+    if (event.target.closest(".heart")) {
+        return;
+    }
+
+    const carId = Number(card.getAttribute("data-car-id"));
+
+    if (carId) {
+        openCarDetails(carId);
+    }
+});
 
 document.addEventListener("DOMContentLoaded", function() {
     displayCars();
