@@ -163,118 +163,39 @@ function openCarDetails(carId) {
         return item.id === carId;
     });
 
-    if (!car) {
-        return;
-    }
+    if (!car) return;
 
     const detailsWindow = document.createElement("div");
-
-    detailsWindow.className = "car-details-window";
+    detailsWindow.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
 
     detailsWindow.innerHTML = `
-        <div class="car-details-box">
-
-            <button class="close-details">
-                ×
-            </button>
-
-            <img 
-                src="${car.image}" 
-                alt="${car.year} ${car.make} ${car.model}"
-                class="details-image"
-            >
-
-            <div class="details-content">
-
-                <p class="car-year">${car.year}</p>
-
-                <h2>${car.make} ${car.model}</h2>
-
-                <h3>$${car.price.toLocaleString()}</h3>
-
-                <div class="details-grid">
-
-                    <div>
-                        <strong>Mileage</strong>
-                        <span>${car.mileage.toLocaleString()} miles</span>
-                    </div>
-
-                    <div>
-                        <strong>Transmission</strong>
-                        <span>${car.transmission}</span>
-                    </div>
-
-                    <div>
-                        <strong>Fuel</strong>
-                        <span>${car.fuel}</span>
-                    </div>
-
-                    <div>
-                        <strong>Color</strong>
-                        <span>${car.color}</span>
-                    </div>
-
-                    <div>
-                        <strong>Drivetrain</strong>
-                        <span>${car.drivetrain}</span>
-                    </div>
-
-                    <div>
-                        <strong>Location</strong>
-                        <span>${car.city}, ${car.location}</span>
-                    </div>
-
-                </div>
-
-                <h3>Vehicle Description</h3>
-
-                <p class="details-description">
-                    ${car.description}
-                </p>
-
-                <button class="contact-seller">
-                    Contact Seller
-                </button>
-
-            </div>
+        <div style="position:relative;background:#fff;color:#111;width:100%;max-width:850px;max-height:90vh;overflow:auto;border-radius:16px;padding:30px;">
+            <button id="closeCarDetails" type="button" style="position:absolute;right:15px;top:15px;width:42px;height:42px;border:0;border-radius:50%;font-size:28px;cursor:pointer;background:#eee;">×</button>
+            <img src="${car.image}" alt="${car.year} ${car.make} ${car.model}" style="width:100%;height:350px;object-fit:cover;border-radius:10px;">
+            <p style="color:#e63946;font-weight:800;margin-top:20px;">${car.year}</p>
+            <h2 style="font-size:34px;margin:5px 0;">${car.make} ${car.model}</h2>
+            <h3 style="color:#e63946;font-size:26px;">${car.price.toLocaleString()}</h3>
+            <p><strong>Mileage:</strong> ${car.mileage.toLocaleString()} miles</p>
+            <p><strong>Transmission:</strong> ${car.transmission}</p>
+            <p><strong>Fuel:</strong> ${car.fuel}</p>
+            <p><strong>Color:</strong> ${car.color}</p>
+            <p><strong>Drivetrain:</strong> ${car.drivetrain}</p>
+            <p><strong>Location:</strong> ${car.city}, ${car.location}</p>
+            <h3>Vehicle Description</h3>
+            <p>${car.description}</p>
         </div>
     `;
 
     document.body.appendChild(detailsWindow);
 
-    detailsWindow.querySelector(".close-details").addEventListener("click", function() {
+    detailsWindow.querySelector("#closeCarDetails").addEventListener("click", function() {
         detailsWindow.remove();
     });
 
     detailsWindow.addEventListener("click", function(event) {
-        if (event.target === detailsWindow) {
-            detailsWindow.remove();
-        }
-    });
-
-    detailsWindow.querySelector(".contact-seller").addEventListener("click", function() {
-        alert("Seller contact feature coming next.");
+        if (event.target === detailsWindow) detailsWindow.remove();
     });
 }
-
-
-document.addEventListener("click", function(event) {
-    const card = event.target.closest(".car-card");
-
-    if (!card) {
-        return;
-    }
-
-    if (event.target.closest(".heart")) {
-        return;
-    }
-
-    const carId = Number(card.getAttribute("data-car-id"));
-
-    if (carId) {
-        openCarDetails(carId);
-    }
-});
 
 document.addEventListener("DOMContentLoaded", function() {
     displayCars();
