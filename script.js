@@ -448,7 +448,11 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                 <button type="button" class="payment-option" data-method="PayPal" style="width:100%;padding:17px;margin-bottom:10px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">🅿️ PayPal <span style="float:right;color:#6b7280;">US & Canada</span></button>
                 <button type="button" class="payment-option" data-method="Apple Pay / Google Pay" style="width:100%;padding:17px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">📱 Apple Pay / Google Pay <span style="float:right;color:#6b7280;">Where supported</span></button>
 
-                <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:18px;">Demo checkout — no payment is processed yet. Stripe/PayPal will be connected before launch.</p>
+                <div style="margin-top:20px;padding:14px 16px;border-radius:10px;background:#f8fafc;border:1px solid #e5e7eb;font-size:12px;color:#6b7280;line-height:1.5;">
+                    <strong style="color:#111827;">Payment security</strong><br>
+                    Your payment will be processed by a secure third-party payment provider. AutoNorth will not store your full card number.
+                </div>
+                <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:14px;">Demo checkout — no payment is processed yet.</p>
             </div>
         `;
         document.body.appendChild(paymentModal);
