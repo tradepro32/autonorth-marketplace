@@ -811,7 +811,7 @@ function showAccount(){
    e.preventDefault();
    const d=Object.fromEntries(new FormData(e.currentTarget));
    const current=getAccount();
-   if(!current && !otpInput.value || !current && !JSON.parse(localStorage.getItem("autonorth_account")||"null")?.phoneVerified){return;}
+   if(!current && !JSON.parse(localStorage.getItem("autonorth_account")||"null")?.phoneVerified){return;}
    localStorage.setItem("autonorth_account",JSON.stringify({name:d.name,email:d.email,phone:d.phone,phoneVerified:true}));
    closeAutoNorthModal(); showAccount();
  };
