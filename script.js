@@ -46,7 +46,6 @@ const cars = [
         color: "Red",
         drivetrain: "All-Wheel Drive",
         description: "Low-mileage Tesla Model 3 with electric performance, modern technology and a clean interior."
-    }
     },
     {
         id: 4,
