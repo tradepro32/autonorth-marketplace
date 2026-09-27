@@ -697,3 +697,20 @@ footer > p {
         grid-template-columns: 1fr 1fr;
     }
 }
+
+
+.view-details-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 7px;
+    background: #111827;
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.view-details-btn:hover {
+    background: #e63946;
+}
