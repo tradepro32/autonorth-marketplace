@@ -287,3 +287,11 @@ document.addEventListener("click", event => {
         showPricing();
     }
 });
+
+
+// AutoNorth global button handlers
+window.showPricing = showPricing;
+window.showListingForm = showListingForm;
+window.searchCars = searchCars;
+window.openCarDetails = openCarDetails;
+console.log("AutoNorth script v9 loaded");
