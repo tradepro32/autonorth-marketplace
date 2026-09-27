@@ -135,6 +135,21 @@ function displayCars(list = cars) {
     }).join("");
 }
 
+function showAllCars() {
+    const make = document.getElementById("make");
+    const model = document.getElementById("model");
+    const price = document.getElementById("price");
+    const location = document.getElementById("location");
+
+    if (make) make.value = "";
+    if (model) model.value = "";
+    if (price) price.value = "";
+    if (location) location.value = "";
+
+    displayCars(cars);
+    document.getElementById("cars")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function searchCars() {
     const make = document.getElementById("make")?.value || "";
     const model = (document.getElementById("model")?.value || "").toLowerCase().trim();
@@ -657,6 +672,7 @@ document.addEventListener("click", event => {
 window.showPricing = showPricing;
 window.showListingForm = showListingForm;
 window.searchCars = searchCars;
+window.showAllCars = showAllCars;
 window.openCarDetails = openCarDetails;
 window.showContactSellerForm = showContactSellerForm;
 window.showSavedCars = showSavedCars;
