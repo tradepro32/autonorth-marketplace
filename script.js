@@ -97,6 +97,8 @@ const cars = [
     }
 ];
 
+function formatUSD(value) { return "$" + Number(value || 0).toLocaleString("en-US"); }
+
 function displayCars(list = cars) {
     const grid = document.querySelector(".car-grid");
     if (!grid) return;
@@ -118,9 +120,9 @@ function displayCars(list = cars) {
                 <p class="car-year">${car.year}</p>
                 <h3>${car.make} ${car.model}</h3>
                 <p class="car-details">${car.mileage.toLocaleString()} miles • ${car.transmission} • ${car.fuel}</p>
-                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${Number(car.planPrice || 0).toFixed(2)}</div>` : ""}
+                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${formatUSD(car.planPrice)}</div>` : ""}
                 <div class="car-bottom">
-                    <strong>${car.price.toLocaleString()}</strong>
+                    <strong>${formatUSD(car.price)}</strong>
                     <span>${car.city}, ${car.location}</span>
                 </div>
                 <div style="display:flex;gap:8px;margin-top:10px;">
@@ -170,7 +172,7 @@ function openCarDetails(id) {
                         <h2>${car.make} ${car.model}</h2>
                         <p class="vehicle-details-location">${car.city}, ${car.location}</p>
                     </div>
-                    <strong class="vehicle-details-price">$ ${car.price.toLocaleString()}</strong>
+                    <strong class="vehicle-details-price">$ ${formatUSD(car.price)}</strong>
                 </div>
 
                 <div class="vehicle-spec-grid">
@@ -245,7 +247,7 @@ function showSavedCars() {
                     <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100%;height:150px;object-fit:cover;">
                     <div style="padding:16px;">
                         <h3>${car.year} ${car.make} ${car.model}</h3>
-                        <p style="color:#e63946;font-weight:800;">${car.price.toLocaleString()}</p>
+                        <p style="color:#e63946;font-weight:800;">${formatUSD(car.price)}</p>
                         <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="width:100%;padding:10px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View Details</button>
                     </div>
                 </div>`).join("")}</div>` : `<div style="text-align:center;padding:40px 10px;color:#6b7280;"><div style="font-size:48px;">♡</div><h3>No saved cars yet</h3><p>Click the heart on a car to save it here.</p></div>`}
