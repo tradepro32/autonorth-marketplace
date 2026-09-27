@@ -714,3 +714,59 @@ footer > p {
 .view-details-btn:hover {
     background: #e63946;
 }
+
+
+/* =========================
+   REALISTIC MARKETPLACE CARDS
+========================= */
+.car-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(17, 24, 39, 0.06);
+}
+
+.car-image {
+    height: 260px;
+    background: #eef0f2;
+}
+
+.car-image img {
+    object-position: center;
+}
+
+.car-info {
+    padding: 20px;
+}
+
+.car-year {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 11px;
+}
+
+.car-info h3 {
+    font-size: 20px;
+    letter-spacing: -0.3px;
+}
+
+.car-details {
+    line-height: 1.6;
+}
+
+.car-bottom strong {
+    color: #111827;
+}
+
+.save-car-btn {
+    transition: all 0.2s ease;
+}
+
+.save-car-btn:hover {
+    background: #fff5f5 !important;
+    border-color: #e63946 !important;
+}
+
+@media (max-width: 900px) {
+    .car-image {
+        height: 230px;
+    }
+}
