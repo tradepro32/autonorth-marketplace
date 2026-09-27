@@ -107,7 +107,7 @@ function displayCars(list = cars) {
     }
 
     grid.innerHTML = list.map(car => {
-        const badge = car.mileage <= 15000 ? "LOW MILEAGE" : car.price >= 45000 ? "PREMIUM" : "EXCELLENT CONDITION";
+        const badge = car.plan === "Premium" ? "PREMIUM LISTING" : car.plan === "Featured" ? "FEATURED LISTING" : (car.mileage <= 15000 ? "LOW MILEAGE" : car.price >= 45000 ? "PREMIUM" : "EXCELLENT CONDITION");
         return `
         <article class="car-card" data-car-id="${car.id}" style="cursor:pointer;">
             <div class="car-image">
