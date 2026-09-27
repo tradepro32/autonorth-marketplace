@@ -161,6 +161,36 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+function showSavedCars() {
+    const savedIds = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]");
+    const savedCars = cars.filter(car => savedIds.includes(car.id));
+    const modal = document.createElement("div");
+    modal.id = "autonorth-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
+    modal.innerHTML = `
+        <div style="background:#fff;color:#111827;width:100%;max-width:900px;max-height:92vh;overflow:auto;border-radius:18px;padding:30px;position:relative;">
+            <button type="button" id="closeSavedCars" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
+            <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;">YOUR GARAGE</p>
+            <h2 style="font-size:32px;margin:6px 0 20px;">Saved Cars</h2>
+            ${savedCars.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">${savedCars.map(car => `
+                <div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+                    <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100%;height:150px;object-fit:cover;">
+                    <div style="padding:16px;">
+                        <h3>${car.year} ${car.make} ${car.model}</h3>
+                        <p style="color:#e63946;font-weight:800;">${car.price.toLocaleString()}</p>
+                        <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="width:100%;padding:10px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View Details</button>
+                    </div>
+                </div>`).join("")}</div>` : `<div style="text-align:center;padding:40px 10px;color:#6b7280;"><div style="font-size:48px;">♡</div><h3>No saved cars yet</h3><p>Click the heart on a car to save it here.</p></div>`}
+        </div>`;
+    document.body.appendChild(modal);
+    document.getElementById("closeSavedCars").onclick = () => modal.remove();
+    modal.onclick = event => {
+        if (event.target === modal) modal.remove();
+        const view = event.target.closest(".saved-view-btn");
+        if (view) { modal.remove(); openCarDetails(view.dataset.carId); }
+    };
+}
+
 function closeAutoNorthModal() {
     const modal = document.getElementById("autonorth-modal");
     if (modal) modal.remove();
@@ -378,4 +408,5 @@ window.showListingForm = showListingForm;
 window.searchCars = searchCars;
 window.openCarDetails = openCarDetails;
 window.showContactSellerForm = showContactSellerForm;
+window.showSavedCars = showSavedCars;
 console.log("AutoNorth script v11 loaded");
