@@ -552,3 +552,148 @@ footer > p {
         gap: 15px;
     }
 }
+
+/* =========================
+   CAR DETAILS WINDOW
+========================= */
+
+.car-details-window {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    z-index: 2000;
+    overflow-y: auto;
+}
+
+.car-details-box {
+    position: relative;
+    width: 100%;
+    max-width: 850px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+}
+
+.close-details {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #111827;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+}
+
+.close-details:hover {
+    background: #e63946;
+    color: #ffffff;
+}
+
+.details-image {
+    width: 100%;
+    height: 380px;
+    object-fit: cover;
+    display: block;
+}
+
+.details-content {
+    padding: 30px;
+}
+
+.details-content h2 {
+    font-size: 34px;
+    margin-bottom: 8px;
+}
+
+.details-content > h3 {
+    color: #e63946;
+    font-size: 26px;
+    margin-bottom: 25px;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.details-grid div {
+    background: #f7f8fa;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.details-grid strong,
+.details-grid span {
+    display: block;
+}
+
+.details-grid strong {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.details-grid span {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.details-description {
+    color: #6b7280;
+    line-height: 1.7;
+    margin: 10px 0 25px;
+}
+
+.contact-seller {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 15px;
+    background: #e63946;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.contact-seller:hover {
+    background: #c92f3b;
+}
+
+@media (max-width: 600px) {
+    .car-details-window {
+        padding: 10px;
+    }
+
+    .details-image {
+        height: 240px;
+    }
+
+    .details-content {
+        padding: 22px;
+    }
+
+    .details-content h2 {
+        font-size: 27px;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
