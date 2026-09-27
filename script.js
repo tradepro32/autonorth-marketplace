@@ -49,154 +49,103 @@ const cars = [
     }
 ];
 
+function displayCars(list = cars) {
+    const grid = document.querySelector(".car-grid");
+    if (!grid) return;
 
-function displayCars(carList = cars) {
-    const carGrid = document.querySelector(".car-grid");
-
-    if (!carGrid) {
+    if (!list.length) {
+        grid.innerHTML = "<p>No cars found.</p>";
         return;
     }
 
-    if (carList.length === 0) {
-        carGrid.innerHTML = `
-            <p style="grid-column: 1 / -1; text-align: center;">
-                No cars found.
-            </p>
-        `;
-        return;
-    }
-
-    carGrid.innerHTML = carList.map(function(car) {
-        return `
-            <article class="car-card" data-car-id="${car.id}">
-                <div class="car-image">
-                    <img 
-                        src="${car.image}" 
-                        alt="${car.year} ${car.make} ${car.model}"
-                    >
+    grid.innerHTML = list.map(car => `
+        <article class="car-card" data-car-id="${car.id}" style="cursor:pointer;">
+            <div class="car-image">
+                <img src="${car.image}" alt="${car.year} ${car.make} ${car.model}">
+            </div>
+            <div class="car-info">
+                <p class="car-year">${car.year}</p>
+                <h3>${car.make} ${car.model}</h3>
+                <p class="car-details">${car.mileage.toLocaleString()} miles • ${car.transmission} • ${car.fuel}</p>
+                <div class="car-bottom">
+                    <strong>$${car.price.toLocaleString()}</strong>
+                    <span>${car.city}, ${car.location}</span>
                 </div>
-
-                <div class="car-info">
-                    <p class="car-year">${car.year}</p>
-
-                    <h3>${car.make} ${car.model}</h3>
-
-                    <p class="car-details">
-                        ${car.mileage.toLocaleString()} miles •
-                        ${car.transmission} •
-                        ${car.fuel}
-                    </p>
-
-                    <div class="car-bottom">
-                        <strong>${car.price.toLocaleString()}</strong>
-                        <span>${car.city}, ${car.location}</span>
-                    </div>
-
-                    <button class="view-details-btn" type="button" data-car-id="${car.id}">
-                        View Details
-                    </button>
-                </div>
-            </article>
-        `;
-    }).join("");
-
-    carGrid.querySelectorAll(".view-details-btn").forEach(function(button) {
-        button.addEventListener("click", function(event) {
-            event.stopPropagation();
-            openCarDetails(Number(button.dataset.carId));
-        });
-    });
-
-    carGrid.querySelectorAll(".car-card").forEach(function(card) {
-        card.addEventListener("click", function(event) {
-            if (event.target.closest(".view-details-btn")) {
-                return;
-            }
-
-            openCarDetails(Number(card.dataset.carId));
-        });
-    });
+                <button type="button" class="view-details-btn" data-car-id="${car.id}">View Details</button>
+            </div>
+        </article>
+    `).join("");
 }
-
 
 function searchCars() {
-    const makeElement = document.getElementById("make");
-    const modelElement = document.getElementById("model");
-    const priceElement = document.getElementById("price");
-    const locationElement = document.getElementById("location");
+    const make = document.getElementById("make")?.value || "";
+    const model = (document.getElementById("model")?.value || "").toLowerCase().trim();
+    const price = document.getElementById("price")?.value || "";
+    const location = document.getElementById("location")?.value || "";
 
-    const make = makeElement ? makeElement.value : "";
-    const model = modelElement ? modelElement.value.toLowerCase().trim() : "";
-    const price = priceElement ? priceElement.value : "";
-    const location = locationElement ? locationElement.value : "";
-
-    const results = cars.filter(function(car) {
-
-        const matchesMake =
-            !make || car.make === make;
-
-        const matchesModel =
-            !model || car.model.toLowerCase().includes(model);
-
-        const matchesPrice =
-            !price || car.price <= Number(price);
-
-        const matchesLocation =
-            !location ||
+    displayCars(cars.filter(car =>
+        (!make || car.make === make) &&
+        (!model || car.model.toLowerCase().includes(model)) &&
+        (!price || car.price <= Number(price)) &&
+        (!location ||
             (location === "United States" && car.location === "USA") ||
-            (location === "Canada" && car.location === "Canada");
-
-        return (
-            matchesMake &&
-            matchesModel &&
-            matchesPrice &&
-            matchesLocation
-        );
-    });
-
-    displayCars(results);
+            (location === "Canada" && car.location === "Canada"))
+    ));
 }
 
-
-function openCarDetails(carId) {
-    const car = cars.find(function(item) {
-        return item.id === carId;
-    });
-
+function openCarDetails(id) {
+    const car = cars.find(item => item.id === Number(id));
     if (!car) return;
 
-    const detailsWindow = document.createElement("div");
-    detailsWindow.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
+    const overlay = document.createElement("div");
+    overlay.id = "vehicle-details-overlay";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
 
-    detailsWindow.innerHTML = `
-        <div style="position:relative;background:#fff;color:#111;width:100%;max-width:850px;max-height:90vh;overflow:auto;border-radius:16px;padding:30px;">
-            <button id="closeCarDetails" type="button" style="position:absolute;right:15px;top:15px;width:42px;height:42px;border:0;border-radius:50%;font-size:28px;cursor:pointer;background:#eee;">×</button>
-            <img src="${car.image}" alt="${car.year} ${car.make} ${car.model}" style="width:100%;height:350px;object-fit:cover;border-radius:10px;">
-            <p style="color:#e63946;font-weight:800;margin-top:20px;">${car.year}</p>
+    overlay.innerHTML = `
+        <div style="background:white;color:#111;max-width:850px;width:100%;max-height:90vh;overflow:auto;border-radius:16px;padding:25px;position:relative;">
+            <button type="button" id="closeVehicleDetails" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;font-size:25px;cursor:pointer;">×</button>
+            <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100%;height:350px;object-fit:cover;border-radius:10px;">
+            <p style="color:#e63946;font-weight:bold;margin-top:20px;">${car.year}</p>
             <h2 style="font-size:34px;margin:5px 0;">${car.make} ${car.model}</h2>
-            <h3 style="color:#e63946;font-size:26px;">${car.price.toLocaleString()}</h3>
-            <p><strong>Mileage:</strong> ${car.mileage.toLocaleString()} miles</p>
-            <p><strong>Transmission:</strong> ${car.transmission}</p>
-            <p><strong>Fuel:</strong> ${car.fuel}</p>
-            <p><strong>Color:</strong> ${car.color}</p>
-            <p><strong>Drivetrain:</strong> ${car.drivetrain}</p>
-            <p><strong>Location:</strong> ${car.city}, ${car.location}</p>
+            <h3 style="color:#e63946;">$${car.price.toLocaleString()}</h3>
+            <p><b>Mileage:</b> ${car.mileage.toLocaleString()} miles</p>
+            <p><b>Transmission:</b> ${car.transmission}</p>
+            <p><b>Fuel:</b> ${car.fuel}</p>
+            <p><b>Color:</b> ${car.color}</p>
+            <p><b>Drivetrain:</b> ${car.drivetrain}</p>
+            <p><b>Location:</b> ${car.city}, ${car.location}</p>
             <h3>Vehicle Description</h3>
             <p>${car.description}</p>
+            <button type="button" id="contactSellerButton" style="width:100%;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:bold;cursor:pointer;">Contact Seller</button>
         </div>
     `;
 
-    document.body.appendChild(detailsWindow);
+    document.body.appendChild(overlay);
 
-    detailsWindow.querySelector("#closeCarDetails").addEventListener("click", function() {
-        detailsWindow.remove();
-    });
-
-    detailsWindow.addEventListener("click", function(event) {
-        if (event.target === detailsWindow) detailsWindow.remove();
-    });
+    document.getElementById("closeVehicleDetails").onclick = () => overlay.remove();
+    overlay.onclick = event => {
+        if (event.target === overlay) overlay.remove();
+    };
+    document.getElementById("contactSellerButton").onclick = () => {
+        alert("Seller contact feature coming next.");
+    };
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("click", event => {
+    const button = event.target.closest(".view-details-btn");
+    if (button) {
+        event.preventDefault();
+        event.stopPropagation();
+        openCarDetails(button.dataset.carId);
+        return;
+    }
+
+    const card = event.target.closest(".car-card");
+    if (card) {
+        openCarDetails(card.dataset.carId);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
     displayCars();
 });
