@@ -422,30 +422,47 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
             image: vehicle.image || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80",
             color: "Not specified",
             drivetrain: "Not specified",
-            description: vehicle.description || "Vehicle listed by an AutoNorth seller."
+            description: vehicle.description || "Vehicle listed by an AutoNorth seller.",
+            plan: plan,
+            planPrice: Number(planPrice)
         };
-
-        cars.push(newListing);
-        const userListings = JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]");
-        userListings.push(newListing);
-        localStorage.setItem("autonorth_user_listings", JSON.stringify(userListings));
-        displayCars(cars);
 
         closeAutoNorthModal();
 
-        const confirmation = document.createElement("div");
-        confirmation.id = "autonorth-modal";
-        confirmation.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
-        confirmation.innerHTML = `
-            <div style="background:white;color:#111827;max-width:520px;width:100%;border-radius:18px;padding:32px;text-align:center;">
-                <div style="font-size:48px;margin-bottom:10px;">✓</div>
-                <h2>Listing details saved</h2>
-                <p style="color:#6b7280;line-height:1.6;margin:14px 0 22px;">Your ${vehicle.year} ${vehicle.make} ${vehicle.model} listing is ready for the ${plan} plan. The next production step is connecting secure payment and a database.</p>
-                <button type="button" id="closeConfirmation" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
+        const paymentModal = document.createElement("div");
+        paymentModal.id = "autonorth-modal";
+        paymentModal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
+        paymentModal.innerHTML = `
+            <div style="background:white;color:#111827;max-width:620px;width:100%;border-radius:18px;padding:30px;position:relative;">
+                <button type="button" id="closePaymentModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
+                <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">SECURE CHECKOUT</p>
+                <h2 style="font-size:30px;margin-bottom:6px;">Choose your payment method</h2>
+                <p style="color:#6b7280;line-height:1.5;margin-bottom:22px;">For sellers in the United States and Canada.</p>
+
+                <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:18px;background:#f8fafc;">
+                    <strong>${plan} listing</strong>
+                    <span style="float:right;font-weight:800;color:#e63946;">$${Number(planPrice).toFixed(2)} USD</span>
+                </div>
+
+                <button type="button" class="payment-option" data-method="Card" style="width:100%;padding:17px;margin-bottom:10px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">💳 Credit / Debit Card <span style="float:right;color:#6b7280;">Visa • Mastercard • Amex</span></button>
+                <button type="button" class="payment-option" data-method="PayPal" style="width:100%;padding:17px;margin-bottom:10px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">🅿️ PayPal <span style="float:right;color:#6b7280;">US & Canada</span></button>
+                <button type="button" class="payment-option" data-method="Apple Pay / Google Pay" style="width:100%;padding:17px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">📱 Apple Pay / Google Pay <span style="float:right;color:#6b7280;">Where supported</span></button>
+
+                <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:18px;">Demo checkout — no payment is processed yet. Stripe/PayPal will be connected before launch.</p>
             </div>
         `;
-        document.body.appendChild(confirmation);
-        document.getElementById("closeConfirmation").onclick = closeAutoNorthModal;
+        document.body.appendChild(paymentModal);
+
+        document.getElementById("closePaymentModal").onclick = closeAutoNorthModal;
+        paymentModal.onclick = event => {
+            if (event.target === paymentModal) closeAutoNorthModal();
+        };
+
+        paymentModal.querySelectorAll(".payment-option").forEach(button => {
+            button.onclick = () => {
+                alert(button.dataset.method + " checkout will be connected before launch. This demo does not charge your card.");
+            };
+        });
     };
 }
 
