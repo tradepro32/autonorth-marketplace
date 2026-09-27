@@ -347,4 +347,5 @@ window.showPricing = showPricing;
 window.showListingForm = showListingForm;
 window.searchCars = searchCars;
 window.openCarDetails = openCarDetails;
-console.log("AutoNorth script v9 loaded");
+window.showContactSellerForm = showContactSellerForm;
+console.log("AutoNorth script v11 loaded");
