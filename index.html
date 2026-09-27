@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body id="top">
 
     <!-- NAVIGATION -->
     <header class="navbar">
@@ -18,7 +18,7 @@
         </div>
 
         <nav>
-            <a href="#">Home</a>
+            <a href="#top">Home</a>
             <a href="#cars">Browse Cars</a>
             <a href="#sell">Sell Your Car</a>
             <a href="#about">About</a>
@@ -26,6 +26,7 @@
 
         <div class="nav-actions">
             <button class="login-btn" type="button" onclick="showSavedCars()">♡ Saved Cars</button>
+            <button class="account-btn" type="button" onclick="showAccount()">Account</button>
             <button class="sell-btn" type="button" onclick="showPricing()">Sell Your Car</button>
         </div>
     </header>
@@ -113,8 +114,17 @@
                 <p class="section-label">EXPLORE</p>
                 <h2>Featured Vehicles</h2>
             </div>
-
-            <button class="view-all" type="button" onclick="showAllCars()">
+            <div class="marketplace-tools">
+                <label>Sort
+                    <select id="sortCars" onchange="applyMarketplaceControls()">
+                        <option value="featured">Featured</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="mileage">Lowest Mileage</option>
+                        <option value="year">Newest Year</option>
+                    </select>
+                </label>
+                <button class="view-all" type="button" onclick="showAllCars()">
                 View All Cars →
             </button>
         </div>
@@ -282,6 +292,7 @@
 
     <!-- FOOTER -->
     <footer id="about">
+        <span id="contact" class="footer-anchor"></span>
 
         <div class="footer-logo">
             Auto<span>North</span>
@@ -296,8 +307,10 @@
             <a href="#">Home</a>
             <a href="#cars">Browse Cars</a>
             <a href="#sell">Sell Your Car</a>
-            <a href="#">Contact</a>
+            <a href="#contact" onclick="showContactUs(); return false;">Contact</a>
         </div>
+
+        <button class="footer-admin-btn" type="button" onclick="showAdminDashboard()">Admin Demo</button>
 
         <p class="copyright">
             © 2026 AutoNorth. All rights reserved.
