@@ -714,9 +714,11 @@ function showAccount() {
             <div class="account-actions">
                 <button id="sellerDashboard" class="account-secondary">Seller Dashboard</button>
                 <button id="savedFromAccount" class="account-secondary">Saved Cars</button>
+                <button id="phoneVerifyAccount" class="account-secondary">📱 Verify Phone</button>
                 <button id="logoutAccount" class="account-danger">Sign Out</button>
             </div>
-            <p class="account-demo-note">Your login is now handled by the AutoNorth backend. Phone/SMS verification will be connected in the next security step.</p>
+            <div id="accountSecurityStatus" style="margin-top:16px;padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;font-size:13px;">Checking security status...</div>
+            <p class="account-demo-note">Phone verification adds another layer of protection for sellers and helps reduce fake accounts.</p>
         </div>`;
         document.body.appendChild(m);
         document.getElementById("closeAccount").onclick = closeAutoNorthModal;
@@ -727,6 +729,11 @@ function showAccount() {
             closeAutoNorthModal();
             showAccount();
         };
+        document.getElementById("phoneVerifyAccount").onclick = () => {
+            closeAutoNorthModal();
+            showPhoneVerification();
+        };
+        refreshSecurityStatus();
         return;
     }
 
@@ -816,7 +823,115 @@ function showAccount() {
     };
 }
 
-async function showSellerDashboard(){
+async async function refreshSecurityStatus(){
+    const box = document.getElementById("accountSecurityStatus");
+    if (!box) return;
+    try {
+        const data = await apiRequest("/me/security");
+        const verified = Boolean(data.phoneVerified);
+        box.innerHTML = verified
+            ? "📱 <strong>Phone verified</strong> — your account has completed phone verification."
+            : "📱 <strong>Phone not verified</strong> — verify your number to strengthen seller security.";
+    } catch (err) {
+        box.textContent = "Security status could not be loaded.";
+    }
+}
+
+async function showPhoneVerification(){
+    closeAutoNorthModal();
+    const account = getAccount();
+    if (!account) { showAccount(); return; }
+
+    const m = document.createElement("div");
+    m.id = "autonorth-modal";
+    m.className = "site-modal";
+    m.innerHTML = `<div class="account-modal">
+        <button id="closePhoneVerify" class="pricing-close">×</button>
+        <p class="pricing-eyebrow">ACCOUNT SECURITY</p>
+        <h2>Verify your phone</h2>
+        <p class="account-intro">We'll send a one-time verification code to your phone number.</p>
+        <form id="phoneSendForm" class="account-form">
+            <label>Phone Number
+                <input required type="tel" name="phone" value="${account.phone || ""}" placeholder="+254..." autocomplete="tel">
+            </label>
+            <div id="phoneVerifyError" style="display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:8px;font-size:13px;"></div>
+            <button class="pricing-button pricing-button-red">Send Verification Code</button>
+        </form>
+        <div id="phoneCodeArea" style="display:none;margin-top:20px;">
+            <label>Verification Code
+                <input id="phoneCodeInput" inputmode="numeric" maxlength="6" placeholder="6-digit code">
+            </label>
+            <button id="verifyPhoneCode" type="button" class="pricing-button pricing-button-dark" style="margin-top:10px;">Verify Phone</button>
+            <div id="devCodeNotice" style="display:none;margin-top:12px;padding:10px;border-radius:8px;background:#fff7ed;border:1px solid #fed7aa;font-size:13px;"></div>
+        </div>
+    </div>`;
+    document.body.appendChild(m);
+
+    document.getElementById("closePhoneVerify").onclick = closeAutoNorthModal;
+    const error = document.getElementById("phoneVerifyError");
+    const codeArea = document.getElementById("phoneCodeArea");
+    const codeInput = document.getElementById("phoneCodeInput");
+    const devNotice = document.getElementById("devCodeNotice");
+
+    document.getElementById("phoneSendForm").onsubmit = async e => {
+        e.preventDefault();
+        error.style.display = "none";
+        const phone = new FormData(e.currentTarget).get("phone");
+        const button = e.currentTarget.querySelector("button");
+        button.disabled = true;
+        button.textContent = "Sending...";
+        try {
+            const result = await apiRequest("/phone/send-code", {
+                method: "POST",
+                body: JSON.stringify({ phone })
+            });
+            codeArea.style.display = "block";
+            if (result.devCode) {
+                devNotice.style.display = "block";
+                devNotice.textContent = "Development test code: " + result.devCode + " (this is never returned in production).";
+            }
+        } catch (err) {
+            error.textContent = err.message || "Could not send the verification code.";
+            error.style.display = "block";
+        } finally {
+            button.disabled = false;
+            button.textContent = "Send Verification Code";
+        }
+    };
+
+    document.getElementById("verifyPhoneCode").onclick = async () => {
+        error.style.display = "none";
+        const code = codeInput.value.trim();
+        if (!/^\d{6}$/.test(code)) {
+            error.textContent = "Enter the 6-digit verification code.";
+            error.style.display = "block";
+            return;
+        }
+        const button = document.getElementById("verifyPhoneCode");
+        button.disabled = true;
+        button.textContent = "Verifying...";
+        try {
+            await apiRequest("/phone/verify", {
+                method: "POST",
+                body: JSON.stringify({ code })
+            });
+            const updated = getAccount() || {};
+            updated.phone = String(new FormData(document.getElementById("phoneSendForm")).get("phone") || updated.phone || "");
+            updated.phoneVerified = true;
+            localStorage.setItem("autonorth_account", JSON.stringify(updated));
+            closeAutoNorthModal();
+            showAccount();
+        } catch (err) {
+            error.textContent = err.message || "Verification failed.";
+            error.style.display = "block";
+        } finally {
+            button.disabled = false;
+            button.textContent = "Verify Phone";
+        }
+    };
+}
+
+function showSellerDashboard(){
  closeAutoNorthModal();
  const token=localStorage.getItem("autonorth_token");
  const account=getAccount();
