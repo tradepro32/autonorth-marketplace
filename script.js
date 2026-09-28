@@ -828,11 +828,11 @@ async function showSellerDashboard(){
  const m=document.createElement("div");
  m.id="autonorth-modal";
  m.className="site-modal";
- m.innerHTML=\`<div class="dashboard-modal">
+ m.innerHTML=`<div class="dashboard-modal">
    <button id="closeDashboard" class="pricing-close">×</button>
    <p class="pricing-eyebrow">SELLER CENTER</p><h2>Seller Dashboard</h2>
    <p class="account-intro">Loading your listings and buyer inquiries...</p>
- </div>\`;
+ </div>`;
  document.body.appendChild(m);
  document.getElementById("closeDashboard").onclick=closeAutoNorthModal;
 
@@ -845,21 +845,21 @@ async function showSellerDashboard(){
    const iq=inquiryData.inquiries||[];
    const liveCount=ls.filter(x=>x.status==="live").length;
 
-   const listings=ls.length?ls.map(x=>\`<div class="dashboard-listing">
-     <img src="\${x.image||"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80"}" alt="\${x.make} \${x.model}">
-     <div class="dashboard-listing-info"><strong>\${x.year} \${x.make} \${x.model}</strong><span>\${formatUSD(x.price)} • \${x.plan||"Basic"}</span><small>● \${x.status||"pending"}</small></div>
-     <button class="dashboard-edit" data-id="\${x.id}">Edit</button>
-     <button class="dashboard-delete" data-id="\${x.id}">Delete</button>
-   </div>\`).join(""):"<p class=\"empty-dashboard\">No listings yet. Start by selling your car.</p>";
+   const listings=ls.length?ls.map(x=>`<div class="dashboard-listing">
+     <img src="${x.image||"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80"}" alt="${x.make} ${x.model}">
+     <div class="dashboard-listing-info"><strong>${x.year} ${x.make} ${x.model}</strong><span>${formatUSD(x.price)} • ${x.plan||"Basic"}</span><small>● ${x.status||"pending"}</small></div>
+     <button class="dashboard-edit" data-id="${x.id}">Edit</button>
+     <button class="dashboard-delete" data-id="${x.id}">Delete</button>
+   </div>`).join(""):"<p class=\"empty-dashboard\">No listings yet. Start by selling your car.</p>";
 
-   const inquiries=iq.length?iq.slice().reverse().map(x=>\`<div class="inquiry-card"><strong>\${x.make||""} \${x.model||""}</strong><span>\${x.buyer_name||""} • \${x.buyer_email||""}</span><p>\${x.message||""}</p><small>\${x.created_at?new Date(x.created_at).toLocaleString():""}</small></div>\`).join(""):"<p class=\"empty-dashboard\">No buyer inquiries yet.</p>";
+   const inquiries=iq.length?iq.slice().reverse().map(x=>`<div class="inquiry-card"><strong>${x.make||""} ${x.model||""}</strong><span>${x.buyer_name||""} • ${x.buyer_email||""}</span><p>${x.message||""}</p><small>${x.created_at?new Date(x.created_at).toLocaleString():""}</small></div>`).join(""):"<p class=\"empty-dashboard\">No buyer inquiries yet.</p>";
 
-   m.querySelector(".dashboard-modal").innerHTML=\`<button id="closeDashboard" class="pricing-close">×</button>
+   m.querySelector(".dashboard-modal").innerHTML=`<button id="closeDashboard" class="pricing-close">×</button>
      <p class="pricing-eyebrow">SELLER CENTER</p><h2>Seller Dashboard</h2>
      <p class="account-intro">Manage your listings and review messages from interested buyers.</p>
-     <div class="dashboard-stats"><div><strong>\${ls.length}</strong><span>Listings</span></div><div><strong>\${liveCount}</strong><span>Live</span></div><div><strong>\${iq.length}</strong><span>Inquiries</span></div></div>
-     <div class="dashboard-section"><div class="dashboard-section-head"><h3>My Listings</h3><button id="dashboardSell" class="dashboard-small-btn">+ Sell a Car</button></div>\${listings}</div>
-     <div class="dashboard-section"><h3>Buyer Inquiries</h3>\${inquiries}</div>\`;
+     <div class="dashboard-stats"><div><strong>${ls.length}</strong><span>Listings</span></div><div><strong>${liveCount}</strong><span>Live</span></div><div><strong>${iq.length}</strong><span>Inquiries</span></div></div>
+     <div class="dashboard-section"><div class="dashboard-section-head"><h3>My Listings</h3><button id="dashboardSell" class="dashboard-small-btn">+ Sell a Car</button></div>${listings}</div>
+     <div class="dashboard-section"><h3>Buyer Inquiries</h3>${inquiries}</div>`;
    document.getElementById("closeDashboard").onclick=closeAutoNorthModal;
    document.getElementById("dashboardSell").onclick=()=>{closeAutoNorthModal();showPricing()};
    m.querySelectorAll(".dashboard-delete").forEach(b=>b.onclick=()=>deleteUserListing(Number(b.dataset.id)));
@@ -868,10 +868,10 @@ async function showSellerDashboard(){
       if(x){closeAutoNorthModal();showEditListingForm(x);}
    });
  }catch(err){
-   m.querySelector(".dashboard-modal").innerHTML=\`<button id="closeDashboard" class="pricing-close">×</button>
+   m.querySelector(".dashboard-modal").innerHTML=`<button id="closeDashboard" class="pricing-close">×</button>
      <p class="pricing-eyebrow">SELLER CENTER</p><h2>Seller Dashboard</h2>
-     <p class="account-intro" style="color:#b91c1c;">\${err.message||"Could not load your seller data."}</p>
-     <button id="retryDashboard" class="pricing-button pricing-button-red">Try Again</button>\`;
+     <p class="account-intro" style="color:#b91c1c;">${err.message||"Could not load your seller data."}</p>
+     <button id="retryDashboard" class="pricing-button pricing-button-red">Try Again</button>`;
    document.getElementById("closeDashboard").onclick=closeAutoNorthModal;
    document.getElementById("retryDashboard").onclick=()=>showSellerDashboard();
  }
