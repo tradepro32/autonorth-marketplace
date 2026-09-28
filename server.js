@@ -68,9 +68,14 @@ app.set("trust proxy", process.env.TRUST_PROXY === "true");
 
 const securityCache = new Map();
 const rateBuckets = new Map();
+const suspiciousActivity = new Map();
 const SECURITY_CACHE_MS = 15 * 60 * 1000;
 const RATE_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MINUTE || 120);
+const AUTH_RATE_LIMIT = Number(process.env.AUTH_RATE_LIMIT_PER_MINUTE || 10);
+const LISTING_RATE_LIMIT = Number(process.env.LISTING_RATE_LIMIT_PER_HOUR || 10);
+const SUSPICIOUS_WINDOW_MS = 60 * 60 * 1000;
+const SUSPICIOUS_THRESHOLD = 5;
 
 function getClientIp(req) {
   return String(req.ip || req.socket?.remoteAddress || "")
@@ -90,7 +95,31 @@ function isPrivateIp(ip) {
   );
 }
 
+function recordSuspiciousActivity(ip, reason) {
+  const now = Date.now();
+  let entry = suspiciousActivity.get(ip);
+  if (!entry || now - entry.startedAt >= SUSPICIOUS_WINDOW_MS) {
+    entry = { startedAt: now, count: 0, reasons: [] };
+  }
+  entry.count += 1;
+  if (entry.reasons.length < 10) entry.reasons.push(reason);
+  suspiciousActivity.set(ip, entry);
+  return entry.count;
+}
+
+function strictRateLimit(key, limit, windowMs) {
+  const now = Date.now();
+  let bucket = rateBuckets.get(key);
+  if (!bucket || now - bucket.startedAt >= windowMs) {
+    bucket = { startedAt: now, count: 0 };
+  }
+  bucket.count += 1;
+  rateBuckets.set(key, bucket);
+  return bucket.count <= limit;
+}
+
 function securityRateLimit(req, res, next) {
+
   const ip = getClientIp(req) || "unknown";
   const now = Date.now();
   let bucket = rateBuckets.get(ip);
@@ -102,9 +131,11 @@ function securityRateLimit(req, res, next) {
   rateBuckets.set(ip, bucket);
 
   if (bucket.count > RATE_LIMIT) {
-    return res.status(429).json({
-      error: "Too many requests. Please wait a minute and try again."
-    });
+    const count = recordSuspiciousActivity(ip, "general-rate-limit");
+    if (count >= SUSPICIOUS_THRESHOLD) {
+      return res.status(429).json({ error: "Access temporarily restricted because of repeated automated activity." });
+    }
+    return res.status(429).json({ error: "Too many requests. Please wait a minute and try again." });
   }
   next();
 }
@@ -203,6 +234,15 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true, service: "AutoNorth API" });
 });
 
+app.use(["/api/auth/register", "/api/auth/login"], (req, res, next) => {
+  const ip = getClientIp(req) || "unknown";
+  if (!strictRateLimit("auth:" + ip, AUTH_RATE_LIMIT, RATE_WINDOW_MS)) {
+    recordSuspiciousActivity(ip, "authentication-rate-limit");
+    return res.status(429).json({ error: "Too many sign-in or registration attempts. Please wait before trying again." });
+  }
+  next();
+});
+
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, phone, password } = req.body;
   if (!name || !email || !password || String(password).length < 8) {
@@ -270,7 +310,14 @@ app.get("/api/seller/listings", auth, (req, res) => {
   });
 });
 
-app.post("/api/listings", auth, (req, res) => {
+app.post("/api/listings", auth, (req, res, next) => {
+  const key = "listing:" + req.user.id;
+  if (!strictRateLimit(key, LISTING_RATE_LIMIT, SUSPICIOUS_WINDOW_MS)) {
+    recordSuspiciousActivity(getClientIp(req), "listing-creation-rate-limit");
+    return res.status(429).json({ error: "Too many listings created recently. Please try again later." });
+  }
+  next();
+}, (req, res) => {
   const d = req.body;
   if (!d.make || !d.model || !d.year || !d.price) {
     return res.status(400).json({ error: "Make, model, year and price are required." });
