@@ -363,7 +363,10 @@ function showSavedCars() {
                                 <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatUSD(car.price)}</span>
                                 <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${car.city}, ${car.location}</span>
                             </div>
-                            <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
+                            <div style="display:flex;gap:6px;">
+    <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
+    <button type="button" class="saved-remove-btn" data-car-id="${car.id}" style="padding:8px 11px;border:1px solid #e5e7eb;border-radius:8px;background:white;color:#e63946;cursor:pointer;">Remove</button>
+</div>
                         </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">♡</div><strong>No saved cars yet</strong><p style="margin:6px 0 0;font-size:13px;">Save a car from the marketplace to find it here.</p></div>`}
                 </section>
 
@@ -663,6 +666,25 @@ function showContactSellerForm(car) {
 
 
 document.addEventListener("click", event => {
+    const removeSavedButton = event.target.closest(".saved-remove-btn");
+
+    if (removeSavedButton) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const carId = Number(removeSavedButton.dataset.carId);
+        const saved = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]")
+            .filter(id => Number(id) !== carId);
+
+        localStorage.setItem("autonorth_saved_cars", JSON.stringify(saved));
+
+        const modal = document.getElementById("autonorth-modal");
+        if (modal) modal.remove();
+
+        showSavedCars();
+        return;
+    }
+
     const saveButton = event.target.closest(".save-car-btn");
     if (saveButton) {
         event.preventDefault();
