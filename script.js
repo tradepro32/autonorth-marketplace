@@ -823,7 +823,7 @@ function showAccount() {
     };
 }
 
-async async function refreshSecurityStatus(){
+async function refreshSecurityStatus(){
     const box = document.getElementById("accountSecurityStatus");
     if (!box) return;
     try {
