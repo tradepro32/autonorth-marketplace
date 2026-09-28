@@ -61,6 +61,127 @@ CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_id);
 
 app.use(express.json({ limit: "1mb" }));
 
+// AutoNorth security layer.
+// IPQualityScore is queried only from the server. Set IPQS_API_KEY in production.
+// VPN/proxy/Tor traffic is blocked when BLOCK_ANONYMOUS_NETWORKS=true.
+app.set("trust proxy", process.env.TRUST_PROXY === "true");
+
+const securityCache = new Map();
+const rateBuckets = new Map();
+const SECURITY_CACHE_MS = 15 * 60 * 1000;
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MINUTE || 120);
+
+function getClientIp(req) {
+  return String(req.ip || req.socket?.remoteAddress || "")
+    .replace(/^::ffff:/, "")
+    .trim();
+}
+
+function isPrivateIp(ip) {
+  return (
+    ip === "127.0.0.1" ||
+    ip === "::1" ||
+    /^10\\./.test(ip) ||
+    /^192\\.168\\./.test(ip) ||
+    /^172\\.(1[6-9]|2\\d|3[0-1])\\./.test(ip) ||
+    ip.startsWith("fc") ||
+    ip.startsWith("fd")
+  );
+}
+
+function securityRateLimit(req, res, next) {
+  const ip = getClientIp(req) || "unknown";
+  const now = Date.now();
+  let bucket = rateBuckets.get(ip);
+
+  if (!bucket || now - bucket.startedAt >= RATE_WINDOW_MS) {
+    bucket = { startedAt: now, count: 0 };
+  }
+  bucket.count += 1;
+  rateBuckets.set(ip, bucket);
+
+  if (bucket.count > RATE_LIMIT) {
+    return res.status(429).json({
+      error: "Too many requests. Please wait a minute and try again."
+    });
+  }
+  next();
+}
+
+async function checkNetworkRisk(req) {
+  const ip = getClientIp(req);
+  const apiKey = process.env.IPQS_API_KEY;
+  const blockAnonymous = process.env.BLOCK_ANONYMOUS_NETWORKS === "true";
+
+  // Local development/Codespaces stays usable until a production IPQS key is configured.
+  if (!apiKey || !blockAnonymous || !ip || isPrivateIp(ip)) {
+    return { allowed: true, checked: false };
+  }
+
+  const cached = securityCache.get(ip);
+  if (cached && Date.now() - cached.checkedAt < SECURITY_CACHE_MS) {
+    return cached.result;
+  }
+
+  const url = new URL("https://www.ipqualityscore.com/api/json/ip");
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("ip", ip);
+  url.searchParams.set("strictness", "1");
+  url.searchParams.set("allow_public_access_points", "true");
+  url.searchParams.set("user_agent", String(req.get("user-agent") || "").slice(0, 500));
+  url.searchParams.set("user_language", String(req.get("accept-language") || "").slice(0, 200));
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) throw new Error("IP reputation service returned " + response.status);
+    const data = await response.json();
+
+    if (!data.success) throw new Error(data.message || "IP reputation lookup failed");
+
+    const blocked =
+      data.proxy === true ||
+      data.vpn === true ||
+      data.tor === true ||
+      data.active_vpn === true ||
+      data.active_tor === true;
+
+    const result = {
+      allowed: !blocked,
+      checked: true,
+      blocked,
+      reason: blocked ? "VPN, proxy, or Tor connection detected." : null,
+      fraudScore: Number.isFinite(Number(data.fraud_score)) ? Number(data.fraud_score) : null
+    };
+
+    securityCache.set(ip, { checkedAt: Date.now(), result });
+    return result;
+  } catch (error) {
+    // Fail closed in production when the anti-fraud service cannot verify an IP.
+    console.error("Network security check failed:", error.message);
+    return {
+      allowed: process.env.SECURITY_FAIL_OPEN === "true",
+      checked: false,
+      blocked: process.env.SECURITY_FAIL_OPEN !== "true",
+      reason: "Network security verification is temporarily unavailable."
+    };
+  }
+}
+
+async function securityGuard(req, res, next) {
+  const result = await checkNetworkRisk(req);
+  if (!result.allowed) {
+    return res.status(403).json({
+      error: "Access denied. AutoNorth does not allow VPN, proxy, or Tor connections.",
+      code: "NETWORK_BLOCKED"
+    });
+  }
+  next();
+}
+
+app.use(securityRateLimit);
+app.use(securityGuard);
+
 function auth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
