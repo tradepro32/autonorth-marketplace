@@ -144,44 +144,106 @@ function displayCars(list = cars) {
 }
 
 function showAllCars() {
-    const make = document.getElementById("make");
-    const model = document.getElementById("model");
-    const price = document.getElementById("price");
-    const location = document.getElementById("location");
+    const ids = ["make", "model", "price", "location", "fuelFilter", "transmissionFilter"];
 
-    if (make) make.value = "";
-    if (model) model.value = "";
-    if (price) price.value = "";
-    if (location) location.value = "";
-    const fuel = document.getElementById("fuelFilter");
-    const transmission = document.getElementById("transmissionFilter");
+    ids.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = "";
+    });
+
     const sort = document.getElementById("sortCars");
-    if (fuel) fuel.value = "";
-    if (transmission) transmission.value = "";
     if (sort) sort.value = "featured";
 
     displayCars(cars);
-    document.getElementById("cars")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    updateMarketplaceResultsCount(cars.length);
+
+    document.getElementById("cars")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 }
 
-function searchCars() { applyMarketplaceControls(); }
+function searchCars() {
+    applyMarketplaceControls();
+}
+
+function updateMarketplaceResultsCount(count) {
+    const counter = document.getElementById("marketplaceResultsCount");
+
+    if (counter) {
+        counter.textContent = `${count} ${count === 1 ? "vehicle" : "vehicles"} found`;
+    }
+}
 
 function applyMarketplaceControls() {
-    const make = document.getElementById("make")?.value || "";
-    const model = (document.getElementById("model")?.value || "").toLowerCase().trim();
+    const make = document.getElementById("make")?.value.trim() || "";
+    const model = document.getElementById("model")?.value.trim().toLowerCase() || "";
     const price = document.getElementById("price")?.value || "";
-    const location = document.getElementById("location")?.value || "";
+    const location = document.getElementById("location")?.value.trim().toLowerCase() || "";
     const fuel = document.getElementById("fuelFilter")?.value || "";
     const transmission = document.getElementById("transmissionFilter")?.value || "";
     const sort = document.getElementById("sortCars")?.value || "featured";
-    let results = cars.filter(car => (!make || car.make === make) && (!model || car.model.toLowerCase().includes(model)) && (!price || car.price <= Number(price)) && (!location || normalizeLocation(car.location) === normalizeLocation(location)) && (!fuel || car.fuel === fuel) && (!transmission || car.transmission === transmission));
-    if (sort === "price-low") results.sort((a,b) => a.price-b.price);
-    if (sort === "price-high") results.sort((a,b) => b.price-a.price);
-    if (sort === "mileage") results.sort((a,b) => a.mileage-b.mileage);
-    if (sort === "year") results.sort((a,b) => b.year-a.year);
-    if (sort === "featured") results.sort((a,b) => (b.plan === "Premium")-(a.plan === "Premium") || (b.plan === "Featured")-(a.plan === "Featured"));
+
+    let results = cars.filter(car => {
+        const carMake = String(car.make || "").toLowerCase();
+        const carModel = String(car.model || "").toLowerCase();
+        const carLocation = normalizeLocation(
+            `${car.city || ""} ${car.location || ""}`
+        ).toLowerCase();
+
+        const matchesMake =
+            !make || car.make === make;
+
+        const matchesModel =
+            !model || carModel.includes(model);
+
+        const matchesPrice =
+            !price || Number(car.price) <= Number(price);
+
+        const matchesLocation =
+            !location ||
+            carLocation.includes(location) ||
+            normalizeLocation(car.location || "").toLowerCase().includes(location);
+
+        const matchesFuel =
+            !fuel || car.fuel === fuel;
+
+        const matchesTransmission =
+            !transmission || car.transmission === transmission;
+
+        return (
+            matchesMake &&
+            matchesModel &&
+            matchesPrice &&
+            matchesLocation &&
+            matchesFuel &&
+            matchesTransmission
+        );
+    });
+
+    if (sort === "price-low") {
+        results.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sort === "price-high") {
+        results.sort((a, b) => Number(b.price) - Number(a.price));
+    } else if (sort === "mileage") {
+        results.sort((a, b) => Number(a.mileage) - Number(b.mileage));
+    } else if (sort === "year") {
+        results.sort((a, b) => Number(b.year) - Number(a.year));
+    } else if (sort === "featured") {
+        results.sort((a, b) => {
+            const premiumA = a.plan === "Premium" ? 2 : a.plan === "Featured" ? 1 : 0;
+            const premiumB = b.plan === "Premium" ? 2 : b.plan === "Featured" ? 1 : 0;
+            return premiumB - premiumA;
+        });
+    }
+
     displayCars(results);
-    document.getElementById("cars")?.scrollIntoView({behavior:"smooth",block:"start"});
+    updateMarketplaceResultsCount(results.length);
+
+    document.getElementById("cars")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 }
 
 function openCarDetails(id) {
