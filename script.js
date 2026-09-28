@@ -791,15 +791,15 @@ function showAccount() {
     m.className = "site-modal";
 
     if (hasSession) {
-        m.innerHTML = \`<div class="account-modal">
+        m.innerHTML = `<div class="account-modal">
             <button id="closeAccount" class="pricing-close">×</button>
             <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
-            <h2>Welcome, \${a.name || "AutoNorth member"}</h2>
+            <h2>Welcome, ${a.name || "AutoNorth member"}</h2>
             <p class="account-intro">Your account is connected to the AutoNorth server.</p>
             <div class="account-form">
-                <label>Full Name<input value="\${a.name || ""}" readonly></label>
-                <label>Email<input value="\${a.email || ""}" readonly></label>
-                <label>Phone Number<input value="\${a.phone || "Not added"}" readonly></label>
+                <label>Full Name<input value="${a.name || ""}" readonly></label>
+                <label>Email<input value="${a.email || ""}" readonly></label>
+                <label>Phone Number<input value="${a.phone || "Not added"}" readonly></label>
             </div>
             <div class="account-actions">
                 <button id="sellerDashboard" class="account-secondary">Seller Dashboard</button>
@@ -807,7 +807,7 @@ function showAccount() {
                 <button id="logoutAccount" class="account-danger">Sign Out</button>
             </div>
             <p class="account-demo-note">Your login is now handled by the AutoNorth backend. Phone/SMS verification will be connected in the next security step.</p>
-        </div>\`;
+        </div>`;
         document.body.appendChild(m);
         document.getElementById("closeAccount").onclick = closeAutoNorthModal;
         document.getElementById("sellerDashboard").onclick = () => { closeAutoNorthModal(); showSellerDashboard(); };
@@ -820,7 +820,7 @@ function showAccount() {
         return;
     }
 
-    m.innerHTML = \`<div class="account-modal">
+    m.innerHTML = `<div class="account-modal">
         <button id="closeAccount" class="pricing-close">×</button>
         <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
         <h2 id="accountTitle">Sign in to AutoNorth</h2>
@@ -842,7 +842,7 @@ function showAccount() {
             <button id="accountSubmit" class="pricing-button pricing-button-red">Sign In</button>
         </form>
         <p class="account-demo-note">Use at least 8 characters for your password. Your password is securely hashed on the server and is never stored in plain text.</p>
-    </div>\`;
+    </div>`;
     document.body.appendChild(m);
 
     const title = document.getElementById("accountTitle");
