@@ -745,91 +745,167 @@ window.showAdminDashboard = showAdminDashboard;
 window.applyMarketplaceControls = applyMarketplaceControls;
 console.log("AutoNorth script v12 loaded");
 
-function getAccount(){return JSON.parse(localStorage.getItem("autonorth_account")||"null");}
+const AUTONORTH_API = "/api";
 
-function showAccount(){
- closeAutoNorthModal();
- const a=getAccount();
- const m=document.createElement("div"); m.id="autonorth-modal"; m.className="site-modal";
- const verified=a?.phoneVerified;
- m.innerHTML=`<div class="account-modal">
- <button id="closeAccount" class="pricing-close">×</button>
- <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
- <h2>${a?"Welcome back":"Create your AutoNorth account"}</h2>
- <p class="account-intro">${a?"Manage your profile, listings and inquiries.":"Create your account with phone verification for a more secure marketplace."}</p>
- <form id="accountForm" class="account-form">
-   <label>Full Name<input required name="name" value="${a?.name||""}"></label>
-   <label>Email<input required type="email" name="email" value="${a?.email||""}"></label>
-   <label>Phone Number<input required type="tel" name="phone" placeholder="+1 555 123 4567" value="${a?.phone||""}" autocomplete="tel"></label>
-   <div class="phone-verification-box" id="phoneVerificationBox">
-     <div><strong>Phone verification</strong><span id="phoneStatus">${verified?"✓ Verified":"Not verified"}</span></div>
-     <p>Enter your phone number above, then we'll send a 6-digit verification code by SMS.</p>
-     <button type="button" id="sendOtp" class="account-secondary">${verified?"Verified":"Send verification code"}</button>
-     <div id="otpArea" style="display:${verified?"block":"none"};margin-top:14px;">
-       <p style="margin:0 0 10px;font-weight:700;">Enter verification code</p>
-       <div class="otp-boxes" style="display:flex;gap:8px;">
-         <input class="otp-digit" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
-         <input class="otp-digit" maxlength="1" inputmode="numeric">
-         <input class="otp-digit" maxlength="1" inputmode="numeric">
-         <input class="otp-digit" maxlength="1" inputmode="numeric">
-         <input class="otp-digit" maxlength="1" inputmode="numeric">
-         <input class="otp-digit" maxlength="1" inputmode="numeric">
-       </div>
-       <small id="otpMessage"></small>
-     </div>
-   </div>
-   <button id="accountSubmit" class="pricing-button pricing-button-red" ${!verified&&!a?"disabled":""}>${a?"Save Account":"Create Account"}</button>
- </form>
- ${a?"<div class=\"account-actions\"><button id=\"sellerDashboard\" class=\"account-secondary\">Seller Dashboard</button><button id=\"savedFromAccount\" class=\"account-secondary\">Saved Cars</button><button id=\"logoutAccount\" class=\"account-danger\">Sign Out</button></div>":""}
- <p class="account-demo-note">Phone verification is currently in demo mode. Before launch, this will connect to an SMS provider to send the code automatically.</p>
- </div>`;
- document.body.appendChild(m);
- document.getElementById("closeAccount").onclick=closeAutoNorthModal;
- const phoneInput=document.querySelector("#accountForm input[name='phone']");
- const otpArea=document.getElementById("otpArea");
- const otpDigits=[...document.querySelectorAll(".otp-digit")];
- const sendOtp=document.getElementById("sendOtp");
- const otpMessage=document.getElementById("otpMessage");
- const submit=document.getElementById("accountSubmit");
- let demoCode="";
- sendOtp.onclick=()=>{
-   const phone=phoneInput.value.trim();
-   if(!phone){phoneInput.focus();return;}
-   demoCode=String(Math.floor(100000+Math.random()*900000));
-   otpArea.style.display="block";
-   sendOtp.textContent="Code sent";
-   otpMessage.textContent="Demo code: "+demoCode;
-   otpMessage.style.color="#e63946";
-   otpDigits[0].focus();
- };
- otpDigits.forEach((input,index)=>{
-   input.addEventListener("input",()=>{
-     input.value=input.value.replace(/\D/g,"").slice(0,1);
-     if(input.value&&index<otpDigits.length-1) otpDigits[index+1].focus();
-     const entered=otpDigits.map(box=>box.value).join("");
-     if(entered.length===6&&entered===demoCode){
-       const current=getAccount()||{};
-       localStorage.setItem("autonorth_account",JSON.stringify({...current,name:document.querySelector("#accountForm input[name='name']").value,email:document.querySelector("#accountForm input[name='email']").value,phone:phoneInput.value.trim(),phoneVerified:true}));
-       document.getElementById("phoneStatus").textContent="✓ Verified";
-       submit.disabled=false;
-       otpMessage.textContent="Phone number verified successfully.";
-       otpMessage.style.color="#15803d";
-     }
-   });
-   input.addEventListener("keydown",e=>{if(e.key==="Backspace"&&!input.value&&index>0) otpDigits[index-1].focus();});
- });
- document.getElementById("accountForm").onsubmit=e=>{
-   e.preventDefault();
-   const d=Object.fromEntries(new FormData(e.currentTarget));
-   const current=getAccount();
-   if(!current && !JSON.parse(localStorage.getItem("autonorth_account")||"null")?.phoneVerified){return;}
-   localStorage.setItem("autonorth_account",JSON.stringify({name:d.name,email:d.email,phone:d.phone,phoneVerified:true}));
-   closeAutoNorthModal(); showAccount();
- };
- document.getElementById("sellerDashboard")?.addEventListener("click",()=>{closeAutoNorthModal();showSellerDashboard();});
- document.getElementById("savedFromAccount")?.addEventListener("click",()=>{closeAutoNorthModal();showSavedCars();});
- document.getElementById("logoutAccount")?.addEventListener("click",()=>{localStorage.removeItem("autonorth_account");closeAutoNorthModal();showAccount();});
+async function apiRequest(path, options = {}) {
+    const token = localStorage.getItem("autonorth_token");
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    if (token) headers.Authorization = "Bearer " + token;
+    const response = await fetch(AUTONORTH_API + path, { ...options, headers });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Request failed");
+    return data;
 }
+
+function getAccount() {
+    return JSON.parse(localStorage.getItem("autonorth_account") || "null");
+}
+
+function getCurrentUser() {
+    return getAccount();
+}
+
+function saveAuthenticatedUser(user, token) {
+    localStorage.setItem("autonorth_token", token);
+    localStorage.setItem("autonorth_account", JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        role: user.role || "user",
+        phoneVerified: Boolean(user.phone_verified)
+    }));
+}
+
+function clearAuthenticatedUser() {
+    localStorage.removeItem("autonorth_token");
+    localStorage.removeItem("autonorth_account");
+}
+
+function showAccount() {
+    closeAutoNorthModal();
+    const a = getAccount();
+    const hasSession = Boolean(localStorage.getItem("autonorth_token") && a);
+    const m = document.createElement("div");
+    m.id = "autonorth-modal";
+    m.className = "site-modal";
+
+    if (hasSession) {
+        m.innerHTML = \`<div class="account-modal">
+            <button id="closeAccount" class="pricing-close">×</button>
+            <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
+            <h2>Welcome, \${a.name || "AutoNorth member"}</h2>
+            <p class="account-intro">Your account is connected to the AutoNorth server.</p>
+            <div class="account-form">
+                <label>Full Name<input value="\${a.name || ""}" readonly></label>
+                <label>Email<input value="\${a.email || ""}" readonly></label>
+                <label>Phone Number<input value="\${a.phone || "Not added"}" readonly></label>
+            </div>
+            <div class="account-actions">
+                <button id="sellerDashboard" class="account-secondary">Seller Dashboard</button>
+                <button id="savedFromAccount" class="account-secondary">Saved Cars</button>
+                <button id="logoutAccount" class="account-danger">Sign Out</button>
+            </div>
+            <p class="account-demo-note">Your login is now handled by the AutoNorth backend. Phone/SMS verification will be connected in the next security step.</p>
+        </div>\`;
+        document.body.appendChild(m);
+        document.getElementById("closeAccount").onclick = closeAutoNorthModal;
+        document.getElementById("sellerDashboard").onclick = () => { closeAutoNorthModal(); showSellerDashboard(); };
+        document.getElementById("savedFromAccount").onclick = () => { closeAutoNorthModal(); showSavedCars(); };
+        document.getElementById("logoutAccount").onclick = () => {
+            clearAuthenticatedUser();
+            closeAutoNorthModal();
+            showAccount();
+        };
+        return;
+    }
+
+    m.innerHTML = \`<div class="account-modal">
+        <button id="closeAccount" class="pricing-close">×</button>
+        <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
+        <h2 id="accountTitle">Sign in to AutoNorth</h2>
+        <p class="account-intro" id="accountIntro">Access your saved cars, listings and buyer inquiries.</p>
+        <div style="display:flex;gap:8px;margin:18px 0;">
+            <button type="button" id="loginTab" class="account-secondary" style="flex:1;">Sign In</button>
+            <button type="button" id="registerTab" class="account-secondary" style="flex:1;">Create Account</button>
+        </div>
+        <form id="accountForm" class="account-form">
+            <div id="nameField" style="display:none;">
+                <label>Full Name<input name="name" autocomplete="name"></label>
+            </div>
+            <label>Email<input required type="email" name="email" autocomplete="email"></label>
+            <div id="phoneField" style="display:none;">
+                <label>Phone Number<input type="tel" name="phone" placeholder="+254..." autocomplete="tel"></label>
+            </div>
+            <label>Password<input required type="password" name="password" minlength="8" autocomplete="current-password"></label>
+            <div id="accountError" style="display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:8px;font-size:13px;"></div>
+            <button id="accountSubmit" class="pricing-button pricing-button-red">Sign In</button>
+        </form>
+        <p class="account-demo-note">Use at least 8 characters for your password. Your password is securely hashed on the server and is never stored in plain text.</p>
+    </div>\`;
+    document.body.appendChild(m);
+
+    const title = document.getElementById("accountTitle");
+    const intro = document.getElementById("accountIntro");
+    const nameField = document.getElementById("nameField");
+    const phoneField = document.getElementById("phoneField");
+    const nameInput = m.querySelector('input[name="name"]');
+    const phoneInput = m.querySelector('input[name="phone"]');
+    const passwordInput = m.querySelector('input[name="password"]');
+    const submit = document.getElementById("accountSubmit");
+    const error = document.getElementById("accountError");
+    let mode = "login";
+
+    const setMode = nextMode => {
+        mode = nextMode;
+        const registering = mode === "register";
+        title.textContent = registering ? "Create your AutoNorth account" : "Sign in to AutoNorth";
+        intro.textContent = registering
+            ? "Create an account to save cars, sell vehicles and manage inquiries."
+            : "Access your saved cars, listings and buyer inquiries.";
+        nameField.style.display = registering ? "block" : "none";
+        phoneField.style.display = registering ? "block" : "none";
+        nameInput.required = registering;
+        phoneInput.required = registering;
+        passwordInput.autocomplete = registering ? "new-password" : "current-password";
+        submit.textContent = registering ? "Create Account" : "Sign In";
+        error.style.display = "none";
+    };
+
+    document.getElementById("closeAccount").onclick = closeAutoNorthModal;
+    document.getElementById("loginTab").onclick = () => setMode("login");
+    document.getElementById("registerTab").onclick = () => setMode("register");
+
+    document.getElementById("accountForm").onsubmit = async event => {
+        event.preventDefault();
+        error.style.display = "none";
+        submit.disabled = true;
+        submit.textContent = mode === "register" ? "Creating..." : "Signing in...";
+        const data = Object.fromEntries(new FormData(event.currentTarget));
+
+        try {
+            const result = mode === "register"
+                ? await apiRequest("/auth/register", {
+                    method: "POST",
+                    body: JSON.stringify({ name: data.name, email: data.email, phone: data.phone, password: data.password })
+                })
+                : await apiRequest("/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify({ email: data.email, password: data.password })
+                });
+            saveAuthenticatedUser(result.user, result.token);
+            closeAutoNorthModal();
+            showAccount();
+        } catch (err) {
+            error.textContent = err.message || "Unable to complete the request.";
+            error.style.display = "block";
+        } finally {
+            submit.disabled = false;
+            submit.textContent = mode === "register" ? "Create Account" : "Sign In";
+        }
+    };
+}
+
 function showSellerDashboard(){
  closeAutoNorthModal();
  const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]");
