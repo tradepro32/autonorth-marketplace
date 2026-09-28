@@ -175,6 +175,42 @@ app.delete("/api/listings/:id", auth, (req, res) => {
   res.json({ ok: true });
 });
 
+
+app.patch("/api/listings/:id", auth, (req, res) => {
+  const d = req.body;
+  const existing = db.prepare(
+    "SELECT * FROM listings WHERE id=? AND seller_id=?"
+  ).get(Number(req.params.id), req.user.id);
+  if (!existing) return res.status(404).json({ error: "Listing not found" });
+
+  const allowedStatuses = ["pending", "live", "rejected", "sold"];
+  const nextStatus = allowedStatuses.includes(d.status) ? d.status : existing.status;
+
+  db.prepare(`
+    UPDATE listings SET
+      make=?, model=?, year=?, price=?, mileage=?, transmission=?, fuel=?,
+      location=?, city=?, image=?, description=?, status=?, updated_at=CURRENT_TIMESTAMP
+    WHERE id=? AND seller_id=?
+  `).run(
+    String(d.make || existing.make).trim(),
+    String(d.model || existing.model).trim(),
+    Number(d.year || existing.year),
+    Number(d.price || existing.price),
+    Number(d.mileage ?? existing.mileage ?? 0),
+    d.transmission || existing.transmission,
+    d.fuel || existing.fuel,
+    d.location || existing.location,
+    d.city || existing.city,
+    d.image || existing.image,
+    d.description || existing.description,
+    nextStatus,
+    Number(req.params.id),
+    req.user.id
+  );
+
+  res.json({ listing: db.prepare("SELECT * FROM listings WHERE id=?").get(Number(req.params.id)) });
+});
+
 app.post("/api/inquiries", (req, res) => {
   const d = req.body;
   if (!d.listingId || !d.name || !d.email || !d.message) {
