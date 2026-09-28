@@ -532,7 +532,10 @@ app.post("/api/phone/send-code", auth, async (req, res) => {
   }
 
   audit(req.user.id, "phone_code_sent", "user", req.user.id, getClientIp(req));
-  res.json({ ok: true, message: "Verification code sent." });
+  const response = { ok: true, message: "Verification code sent." };
+  // Development-only helper so the local Codespace can test the complete flow without real SMS credentials.
+  if (process.env.NODE_ENV !== "production") response.devCode = code;
+  res.json(response);
 });
 
 app.post("/api/phone/verify", auth, async (req, res) => {
