@@ -931,7 +931,7 @@ async function showPhoneVerification(){
     };
 }
 
-function showSellerDashboard(){
+async function showSellerDashboard(){
  closeAutoNorthModal();
  const token=localStorage.getItem("autonorth_token");
  const account=getAccount();
