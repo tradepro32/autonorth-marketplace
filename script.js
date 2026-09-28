@@ -432,6 +432,13 @@ function showPricing() {
     };
 }
 function showListingForm(plan = "Basic", planPrice = "9.99") {
+    const account = getAccount();
+    const token = localStorage.getItem("autonorth_token");
+    if (!account || !token) {
+        showAccount();
+        return;
+    }
+
     closeAutoNorthModal();
 
     const modal = document.createElement("div");
@@ -441,23 +448,11 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
     modal.innerHTML = `
         <div style="background:#fff;color:#111827;width:100%;max-width:760px;max-height:92vh;overflow:auto;border-radius:18px;padding:30px;position:relative;">
             <button type="button" id="closeListingModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
-
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CREATE YOUR LISTING</p>
             <h2 style="font-size:32px;margin-bottom:5px;">List your car</h2>
-            <div class="selected-plan-summary">
-                <div>
-                    <span>SELECTED PLAN</span>
-                    <strong>${plan}</strong>
-                </div>
-                <strong class="selected-plan-price">${Number(planPrice).toFixed(2)}</strong>
-            </div>
-            <p class="listing-form-note">Complete your vehicle details below. Your listing will be prepared with the selected visibility plan.</p>
-            <div class="listing-process-steps">
-                <span class="active">1. Vehicle details</span>
-                <span>2. Payment</span>
-                <span>3. Listing live</span>
-            </div>
-
+            <div class="selected-plan-summary"><div><span>SELECTED PLAN</span><strong>${plan}</strong></div><strong class="selected-plan-price">${Number(planPrice).toFixed(2)}</strong></div>
+            <p class="listing-form-note">Complete your vehicle details below. Your listing will be saved to your AutoNorth seller account.</p>
+            <div class="listing-process-steps"><span class="active">1. Vehicle details</span><span>2. Payment</span><span>3. Listing submitted</span></div>
             <form id="vehicleListingForm">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                     <label>Make<input required name="make" placeholder="e.g. Toyota" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
@@ -472,165 +467,80 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     <label style="grid-column:1/-1;">Photo URL<input name="image" placeholder="https://..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label style="grid-column:1/-1;">Description<textarea name="description" rows="4" placeholder="Tell buyers about the vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea></label>
                 </div>
-                <button type="submit" style="width:100%;margin-top:20px;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;font-size:16px;cursor:pointer;">Continue with ${plan} — ${planPrice}</button>
-                <p style="font-size:12px;color:#6b7280;margin-top:10px;text-align:center;">Demo listing flow: no payment is charged yet.</p>
+                <button type="submit" id="saveListingButton" style="width:100%;margin-top:20px;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;font-size:16px;cursor:pointer;">Save Listing — ${plan}</button>
+                <p style="font-size:12px;color:#6b7280;margin-top:10px;text-align:center;">Payment is still demo-only. Your listing will be stored in the database as pending.</p>
             </form>
         </div>
     `;
 
     document.body.appendChild(modal);
-
     document.getElementById("closeListingModal").onclick = closeAutoNorthModal;
-    modal.onclick = event => {
-        if (event.target === modal) closeAutoNorthModal();
-    };
+    modal.onclick = event => { if (event.target === modal) closeAutoNorthModal(); };
 
-    document.getElementById("vehicleListingForm").onsubmit = event => {
+    document.getElementById("vehicleListingForm").onsubmit = async event => {
         event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const vehicle = Object.fromEntries(formData.entries());
+        const submit = document.getElementById("saveListingButton");
+        const vehicle = Object.fromEntries(new FormData(event.currentTarget));
+        submit.disabled = true;
+        submit.textContent = "Saving to AutoNorth...";
 
-        const newListing = {
-            id: Date.now(),
-            make: vehicle.make,
-            model: vehicle.model,
-            year: Number(vehicle.year),
-            price: Number(vehicle.price),
-            mileage: Number(vehicle.mileage),
-            transmission: vehicle.transmission,
-            fuel: vehicle.fuel,
-            location: vehicle.location,
-            city: vehicle.city,
-            image: vehicle.image || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80",
-            color: "Not specified",
-            drivetrain: "Not specified",
-            description: vehicle.description || "Vehicle listed by an AutoNorth seller.",
-            plan: plan,
-            planPrice: Number(planPrice)
-        };
+        try {
+            const result = await apiRequest("/listings", {
+                method: "POST",
+                body: JSON.stringify({
+                    make: vehicle.make,
+                    model: vehicle.model,
+                    year: Number(vehicle.year),
+                    price: Number(vehicle.price),
+                    mileage: Number(vehicle.mileage),
+                    transmission: vehicle.transmission,
+                    fuel: vehicle.fuel,
+                    location: normalizeLocation(vehicle.location),
+                    city: vehicle.city,
+                    image: vehicle.image || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80",
+                    description: vehicle.description || "Vehicle listed by an AutoNorth seller.",
+                    plan,
+                    planPrice: Number(planPrice)
+                })
+            });
 
-        closeAutoNorthModal();
-
-        const paymentModal = document.createElement("div");
-        paymentModal.id = "autonorth-modal";
-        paymentModal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
-        paymentModal.innerHTML = `
-            <div style="background:white;color:#111827;max-width:620px;width:100%;border-radius:18px;padding:30px;position:relative;">
-                <button type="button" id="closePaymentModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
-                <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">SECURE CHECKOUT</p>
-                <h2 style="font-size:30px;margin-bottom:6px;">Choose your payment method</h2>
-                <p style="color:#6b7280;line-height:1.5;margin-bottom:22px;">For sellers in the United States and Canada.</p>
-
-                <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:18px;background:#f8fafc;">
-                    <strong>${plan} listing</strong>
-                    <span style="float:right;font-weight:800;color:#e63946;">$${Number(planPrice).toFixed(2)} USD</span>
-                </div>
-
-                <button type="button" class="payment-option" data-method="Card" style="width:100%;padding:17px;margin-bottom:10px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">💳 Credit / Debit Card <span style="float:right;color:#6b7280;">Visa • Mastercard • Amex</span></button>
-                <button type="button" class="payment-option" data-method="PayPal" style="width:100%;padding:17px;margin-bottom:10px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">🅿️ PayPal <span style="float:right;color:#6b7280;">US & Canada</span></button>
-                <button type="button" class="payment-option" data-method="Apple Pay / Google Pay" style="width:100%;padding:17px;border:1px solid #d1d5db;border-radius:10px;background:white;text-align:left;cursor:pointer;font-weight:800;">📱 Apple Pay / Google Pay <span style="float:right;color:#6b7280;">Where supported</span></button>
-
-                <div style="margin-top:20px;padding:14px 16px;border-radius:10px;background:#f8fafc;border:1px solid #e5e7eb;font-size:12px;color:#6b7280;line-height:1.5;">
-                    <strong style="color:#111827;">Payment security</strong><br>
-                    Your payment will be processed by a secure third-party payment provider. AutoNorth will not store your full card number.
-                </div>
-                <div class="checkout-process-steps">
-                    <span class="done">✓ Vehicle details</span>
-                    <span class="active">2. Payment</span>
-                    <span>3. Listing live</span>
-                </div>
-                <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:14px;">Demo checkout — no payment is processed yet.</p>
-            </div>
-        `;
-        document.body.appendChild(paymentModal);
-
-        document.getElementById("closePaymentModal").onclick = closeAutoNorthModal;
-        paymentModal.onclick = event => {
-            if (event.target === paymentModal) closeAutoNorthModal();
-        };
-
-        paymentModal.querySelectorAll(".payment-option").forEach(button => {
-            button.onclick = () => {
-                const checkout = document.createElement("div");
-                checkout.id = "autonorth-modal";
-                checkout.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
-                checkout.innerHTML = `
-                    <div style="background:white;color:#111827;max-width:520px;width:100%;border-radius:18px;padding:30px;text-align:center;">
-                        <div style="font-size:44px;margin-bottom:8px;">🔒</div>
-                        <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;">${button.dataset.method.toUpperCase()}</p>
-                        <h2>Secure checkout</h2>
-                        <p style="color:#6b7280;line-height:1.6;">You selected <strong>${plan}</strong> for <strong>${Number(planPrice).toFixed(2)} USD</strong>.</p>
-                        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin:18px 0;color:#6b7280;font-size:13px;">This is a demo checkout. No real payment will be taken. Click below to simulate a successful payment and publish your listing.</div>
-                        <div class="checkout-process-steps" style="margin:18px 0;">
-                            <span class="done">✓ Vehicle details</span>
-                            <span class="done">✓ Payment</span>
-                            <span class="active">3. Listing live</span>
-                        </div>
-                        <button type="button" id="simulatePayment" style="width:100%;padding:14px 22px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Simulate Secure Payment</button>
-                        <button type="button" id="backToPayment" style="width:100%;margin-top:10px;padding:13px 22px;border:1px solid #d1d5db;border-radius:8px;background:white;color:#111827;font-weight:800;cursor:pointer;">Back to payment methods</button>
+            const listing = result.listing;
+            const liveModal = document.createElement("div");
+            liveModal.id = "autonorth-modal";
+            liveModal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
+            liveModal.innerHTML = `
+                <div style="background:white;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;text-align:center;">
+                    <div style="width:70px;height:70px;border-radius:50%;background:#fff7ed;color:#ea580c;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;margin:0 auto 14px;">✓</div>
+                    <p style="color:#ea580c;font-size:12px;font-weight:800;letter-spacing:2px;">LISTING SUBMITTED</p>
+                    <h2 style="font-size:30px;margin:6px 0 10px;">Your listing is saved</h2>
+                    <p style="color:#6b7280;line-height:1.6;">${listing.year} ${listing.make} ${listing.model} has been saved to your seller account.</p>
+                    <div class="checkout-process-steps" style="margin:20px 0;">
+                        <span class="done">✓ Vehicle details</span>
+                        <span class="active">2. Payment</span>
+                        <span>3. Listing live</span>
                     </div>
-                `;
-                document.body.appendChild(checkout);
-
-                document.getElementById("backToPayment").onclick = () => {
-                    checkout.remove();
-                };
-
-                document.getElementById("simulatePayment").onclick = () => {
-                    const savedListings = JSON.parse(localStorage.getItem("autonorth_user_listings") || "[]");
-                    const listingToSave = { ...newListing, paymentMethod: button.dataset.method, paymentStatus: "demo-completed" };
-
-                    const existingIndex = savedListings.findIndex(item => item.id === listingToSave.id);
-                    if (existingIndex === -1) {
-                        savedListings.push(listingToSave);
-                    } else {
-                        savedListings[existingIndex] = listingToSave;
-                    }
-
-                    localStorage.setItem("autonorth_user_listings", JSON.stringify(savedListings));
-
-                    const carIndex = cars.findIndex(item => item.id === listingToSave.id);
-                    if (carIndex === -1) {
-                        cars.push(listingToSave);
-                    } else {
-                        cars[carIndex] = listingToSave;
-                    }
-
-                    displayCars();
-                    checkout.remove();
-
-                    const liveModal = document.createElement("div");
-                    liveModal.id = "autonorth-modal";
-                    liveModal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
-                    liveModal.innerHTML = `
-                        <div style="background:white;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;text-align:center;">
-                            <div style="width:70px;height:70px;border-radius:50%;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;margin:0 auto 14px;">✓</div>
-                            <p style="color:#059669;font-size:12px;font-weight:800;letter-spacing:2px;">LISTING LIVE</p>
-                            <h2 style="font-size:30px;margin:6px 0 10px;">Your listing is live</h2>
-                            <p style="color:#6b7280;line-height:1.6;">${listingToSave.year} ${listingToSave.make} ${listingToSave.model} has been added to the AutoNorth marketplace.</p>
-                            <div class="checkout-process-steps" style="margin:20px 0;">
-                                <span class="done">✓ Vehicle details</span>
-                                <span class="done">✓ Payment</span>
-                                <span class="done">✓ Listing live</span>
-                            </div>
-                            <div style="padding:16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;text-align:left;margin-bottom:18px;">
-                                <strong>${plan} plan</strong>
-                                <span style="float:right;font-weight:800;color:#e63946;">${formatUSD(planPrice)}</span>
-                                <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Payment method: ${button.dataset.method}</p>
-                            </div>
-                            <p style="font-size:12px;color:#6b7280;line-height:1.5;">Demo payment completed successfully. Real payment processing will be connected before launch.</p>
-                            <button type="button" id="finishListing" style="width:100%;padding:14px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">View Marketplace</button>
-                        </div>
-                    `;
-                    document.body.appendChild(liveModal);
-
-                    document.getElementById("finishListing").onclick = () => {
-                        liveModal.remove();
-                        document.getElementById("cars")?.scrollIntoView({ behavior: "smooth" });
-                    };
-                };
+                    <div style="padding:16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;text-align:left;margin-bottom:18px;">
+                        <strong>${plan} plan</strong>
+                        <span style="float:right;font-weight:800;color:#e63946;">${formatUSD(planPrice)}</span>
+                        <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Status: Pending</p>
+                    </div>
+                    <p style="font-size:12px;color:#6b7280;line-height:1.5;">The listing is now in your database-backed Seller Dashboard. Real payment and automatic activation will be connected next.</p>
+                    <button type="button" id="finishListing" style="width:100%;padding:14px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Open Seller Dashboard</button>
+                </div>
+            `;
+            document.body.appendChild(liveModal);
+            document.getElementById("finishListing").onclick = () => {
+                liveModal.remove();
+                showSellerDashboard();
             };
-        });
+        } catch (err) {
+            submit.disabled = false;
+            submit.textContent = `Save Listing — ${plan}`;
+            const error = document.createElement("div");
+            error.style.cssText = "margin-top:12px;padding:12px;border-radius:8px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-size:13px;";
+            error.textContent = err.message || "Could not save listing.";
+            submit.parentElement.appendChild(error);
+        }
     };
 }
 
