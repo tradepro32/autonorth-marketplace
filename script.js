@@ -97,6 +97,9 @@ const cars = [
     }
 ];
 
+const LISTING_CURRENCIES = ["USD","EUR","GBP","KES","CAD","AUD","AED","NGN","ZAR","JPY","INR","CHF","CNY","GHS","UGX","TZS","RWF","NZD","SGD","BRL","MXN"];
+function currencyOptions(selected = "USD") { return LISTING_CURRENCIES.map(code => '<option value="' + code + '"' + (code === selected ? ' selected' : '') + '>' + code + '</option>').join(""); }
+function formatVehiclePrice(value, currency = "USD") { const code = LISTING_CURRENCIES.includes(currency) ? currency : "USD"; return new Intl.NumberFormat("en", {style:"currency",currency:code,maximumFractionDigits:code==="JPY" ? 0 : 2}).format(Number(value || 0)); }
 function formatUSD(value) { return "$" + Number(value || 0).toLocaleString("en-US"); }
 
 function normalizeLocation(value) {
@@ -130,7 +133,7 @@ function displayCars(list = cars) {
                 <div class="car-specs"><span>${car.mileage.toLocaleString()} mi</span><span>${car.transmission}</span><span>${car.fuel}</span></div>
                 ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${formatUSD(car.planPrice)}</div>` : ""}
                 <div class="car-bottom">
-                    <strong>${formatUSD(car.price)}</strong>
+                    <strong>${formatVehiclePrice(car.price, car.currency)}</strong>
                     <span>${car.city}, ${car.location}</span>
                 </div>
                 <div class="car-actions">
@@ -198,7 +201,7 @@ function applyMarketplaceControls() {
             !model || carModel.includes(model);
 
         const matchesPrice =
-            !price || Number(car.price) <= Number(price);
+            !price || (String(car.currency || "USD") === "USD" && Number(car.price) <= Number(price));
 
         const matchesLocation =
             !location ||
@@ -222,9 +225,9 @@ function applyMarketplaceControls() {
     });
 
     if (sort === "price-low") {
-        results.sort((a, b) => Number(a.price) - Number(b.price));
+        results.sort((a, b) => String(a.currency || "USD").localeCompare(String(b.currency || "USD")) || Number(a.price) - Number(b.price));
     } else if (sort === "price-high") {
-        results.sort((a, b) => Number(b.price) - Number(a.price));
+        results.sort((a, b) => String(a.currency || "USD").localeCompare(String(b.currency || "USD")) || Number(b.price) - Number(a.price));
     } else if (sort === "mileage") {
         results.sort((a, b) => Number(a.mileage) - Number(b.mileage));
     } else if (sort === "year") {
@@ -267,7 +270,7 @@ function openCarDetails(id) {
                         <h2>${car.make} ${car.model}</h2>
                         <p class="vehicle-details-location">${car.city}, ${car.location}</p>
                     </div>
-                    <strong class="vehicle-details-price">${formatUSD(car.price)}</strong>
+                    <strong class="vehicle-details-price">${formatVehiclePrice(car.price, car.currency)}</strong>
                 </div>
 
                 <div class="vehicle-spec-grid">
@@ -360,7 +363,7 @@ function showSavedCars() {
                             <img src="${car.image}" alt="${car.make} ${car.model}" style="width:100px;height:72px;object-fit:cover;border-radius:9px;">
                             <div style="flex:1;min-width:0;">
                                 <strong style="display:block;">${car.year} ${car.make} ${car.model}</strong>
-                                <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatUSD(car.price)}</span>
+                                <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatVehiclePrice(car.price, car.currency)}</span>
                                 <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${car.city}, ${car.location}</span>
                             </div>
                             <div style="display:flex;gap:6px;">
@@ -383,7 +386,7 @@ function showSavedCars() {
                             <img src="${listing.image}" alt="${listing.make} ${listing.model}" style="width:100px;height:72px;object-fit:cover;border-radius:9px;">
                             <div style="flex:1;min-width:0;">
                                 <strong style="display:block;">${listing.year} ${listing.make} ${listing.model}</strong>
-                                <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatUSD(listing.price)}</span>
+                                <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatVehiclePrice(listing.price, listing.currency)}</span>
                                 <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${listing.plan} • ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</span>
                             </div>
                             <button type="button" class="my-listing-view-btn" data-car-id="${listing.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
@@ -523,8 +526,8 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     <label>Make<input required name="make" placeholder="e.g. Toyota" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label>Model<input required name="model" placeholder="e.g. Camry SE" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label>Year<input required type="number" min="1980" max="2027" name="year" placeholder="2023" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
-                    <label>Price (USD)<input required type="number" min="1" name="price" placeholder="27500" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
-                    <label>Mileage<input required type="number" min="0" name="mileage" placeholder="28400" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Vehicle price<input required type="number" min="1" name="price" placeholder="27500" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
+                    <label>Price currency<select required name="currency" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;">${currencyOptions()}</select></label>\n                    <label>Mileage<input required type="number" min="0" name="mileage" placeholder="28400" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label>Country<input required name="location" placeholder="Enter country" autocomplete="country-name" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label>City / State / Province<input required name="city" placeholder="e.g. Texas" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label>Fuel<select required name="fuel" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"><option value="">Select</option><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label>
@@ -557,6 +560,7 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     model: vehicle.model,
                     year: Number(vehicle.year),
                     price: Number(vehicle.price),
+                    currency: vehicle.currency || "USD",
                     mileage: Number(vehicle.mileage),
                     transmission: vehicle.transmission,
                     fuel: vehicle.fuel,
@@ -1048,7 +1052,7 @@ async function showSellerDashboard(){
 
    const listings=ls.length?ls.map(x=>`<div class="dashboard-listing">
      <img src="${x.image||"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80"}" alt="${x.make} ${x.model}">
-     <div class="dashboard-listing-info"><strong>${x.year} ${x.make} ${x.model}</strong><span>${formatUSD(x.price)} • ${x.plan||"Basic"}</span><small>● ${x.status||"pending"}</small></div>
+     <div class="dashboard-listing-info"><strong>${x.year} ${x.make} ${x.model}</strong><span>${formatVehiclePrice(x.price, x.currency)} • ${x.plan||"Basic"}</span><small>● ${x.status||"pending"}</small></div>
      <button class="dashboard-edit" data-id="${x.id}">Edit</button>
      <button class="dashboard-delete" data-id="${x.id}">Delete</button>
    </div>`).join(""):"<p class=\"empty-dashboard\">No listings yet. Start by selling your car.</p>";
@@ -1082,9 +1086,9 @@ function adminRemoveListing(id){const ls=JSON.parse(localStorage.getItem("autono
 
 function showEditListingForm(x){
  closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
- m.innerHTML="<div class=\"edit-listing-modal\"><button id=\"closeEdit\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">EDIT LISTING</p><h2>Update your vehicle</h2><form id=\"editForm\" class=\"edit-listing-form\"><label>Make<input required name=\"make\" value=\""+x.make+"\"></label><label>Model<input required name=\"model\" value=\""+x.model+"\"></label><label>Year<input required type=\"number\" name=\"year\" value=\""+x.year+"\"></label><label>Price<input required type=\"number\" name=\"price\" value=\""+x.price+"\"></label><label>Mileage<input required type=\"number\" name=\"mileage\" value=\""+x.mileage+"\"></label><label>Country<input required name=\"location\" value=\""+String(x.location||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;")+"\" placeholder=\"Enter country\"></label><label>City / State / Province<input required name=\"city\" value=\""+x.city+"\"></label><label>Fuel<select name=\"fuel\"><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label><label>Transmission<select name=\"transmission\"><option>Automatic</option><option>Manual</option></select></label><label class=\"full-field\">Photo URL<input name=\"image\" value=\""+x.image+"\"></label><label class=\"full-field\">Description<textarea name=\"description\">"+(x.description||"")+"</textarea></label><button class=\"pricing-button pricing-button-red full-field\">Save Changes</button></form></div>";
+ m.innerHTML="<div class=\"edit-listing-modal\"><button id=\"closeEdit\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">EDIT LISTING</p><h2>Update your vehicle</h2><form id=\"editForm\" class=\"edit-listing-form\"><label>Make<input required name=\"make\" value=\""+x.make+"\"></label><label>Model<input required name=\"model\" value=\""+x.model+"\"></label><label>Year<input required type=\"number\" name=\"year\" value=\""+x.year+"\"></label><label>Price<input required type=\"number\" name=\"price\" value=\""+x.price+"\"></label><label>Currency<select name=\"currency\">"+currencyOptions(x.currency||"USD")+"</select></label><label>Mileage<input required type=\"number\" name=\"mileage\" value=\""+x.mileage+"\"></label><label>Country<input required name=\"location\" value=\""+String(x.location||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;")+"\" placeholder=\"Enter country\"></label><label>City / State / Province<input required name=\"city\" value=\""+x.city+"\"></label><label>Fuel<select name=\"fuel\"><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label><label>Transmission<select name=\"transmission\"><option>Automatic</option><option>Manual</option></select></label><label class=\"full-field\">Photo URL<input name=\"image\" value=\""+x.image+"\"></label><label class=\"full-field\">Description<textarea name=\"description\">"+(x.description||"")+"</textarea></label><button class=\"pricing-button pricing-button-red full-field\">Save Changes</button></form></div>";
  document.body.appendChild(m);document.getElementById("closeEdit").onclick=closeAutoNorthModal;
- document.getElementById("editForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const u={...x,make:d.make,model:d.model,year:Number(d.year),price:Number(d.price),mileage:Number(d.mileage),location:normalizeLocation(d.location),city:d.city,fuel:d.fuel,transmission:d.transmission,image:d.image||x.image,description:d.description||x.description};const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").map(v=>v.id===x.id?u:v);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(v=>v.id===x.id);if(i>=0)cars[i]=u;displayCars();closeAutoNorthModal();showSellerDashboard();};
+ document.getElementById("editForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const u={...x,make:d.make,model:d.model,year:Number(d.year),price:Number(d.price),currency:d.currency||x.currency||"USD",mileage:Number(d.mileage),location:normalizeLocation(d.location),city:d.city,fuel:d.fuel,transmission:d.transmission,image:d.image||x.image,description:d.description||x.description};const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").map(v=>v.id===x.id?u:v);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(v=>v.id===x.id);if(i>=0)cars[i]=u;displayCars();closeAutoNorthModal();showSellerDashboard();};
 }
 
 function showContactUs(){
@@ -1095,7 +1099,7 @@ function showContactUs(){
 function showAdminDashboard(){
  if (localStorage.getItem("autonorth_admin_demo_enabled") !== "true") { console.warn("Admin dashboard is disabled in the public build."); return; }
  closeAutoNorthModal();const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]");const iq=JSON.parse(localStorage.getItem("autonorth_inquiries")||"[]");const cm=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");const a=getAccount();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
- let rows=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatUSD(x.price)+" • "+x.plan+" • Live</span></div><button class=\"dashboard-delete admin-remove\" data-id=\""+x.id+"\">Remove</button></div>").join(""):"<p class=\"empty-dashboard\">No seller listings.</p>";
+ let rows=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatVehiclePrice(x.price, x.currency)+" • "+x.plan+" • Live</span></div><button class=\"dashboard-delete admin-remove\" data-id=\""+x.id+"\">Remove</button></div>").join(""):"<p class=\"empty-dashboard\">No seller listings.</p>";
  let inqs=iq.length?iq.map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" • "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries.</p>";
  let msgs=cm.length?cm.map(x=>"<div class=\"inquiry-card\"><strong>"+x.name+"</strong><span>"+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No contact messages.</p>";
  m.innerHTML="<div class=\"dashboard-modal admin-dashboard\"><button id=\"closeAdmin\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">ADMIN DEMO</p><h2>AutoNorth Admin Dashboard</h2><p class=\"account-intro\">Demo management tools. Real server-side admin security is required before launch.</p><div class=\"dashboard-stats\"><div><strong>"+cars.length+"</strong><span>Cars</span></div><div><strong>"+ls.length+"</strong><span>Seller Listings</span></div><div><strong>"+(a?1:0)+"</strong><span>Demo Users</span></div><div><strong>"+(iq.length+cm.length)+"</strong><span>Messages</span></div></div><div class=\"dashboard-section\"><h3>Seller Listings</h3>"+rows+"</div><div class=\"dashboard-section\"><h3>Buyer Inquiries</h3>"+inqs+"</div><div class=\"dashboard-section\"><h3>Contact Messages</h3>"+msgs+"</div></div>";
