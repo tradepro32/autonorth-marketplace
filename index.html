@@ -38,7 +38,7 @@
 
         <div class="hero-content">
 
-            <p class="hero-label"><span class="status-dot" aria-hidden="true"></span> THE USA &amp; CANADA CAR MARKETPLACE</p>
+            <p class="hero-label"><span class="status-dot" aria-hidden="true"></span> THE GLOBAL CAR MARKETPLACE</p>
 
             <h1>
                 Your next drive<br>
@@ -46,7 +46,7 @@
             </h1>
 
             <p class="hero-text">
-                Explore vehicles, compare your options and connect with sellers across the USA and Canada.
+                Explore vehicles, compare your options and connect with sellers around the world.
             </p>
 
             <div class="hero-quicklinks"><a href="#cars">Explore vehicles <span aria-hidden="true">→</span></a><button type="button" onclick="showPricing()">List a vehicle <span aria-hidden="true">↗</span></button></div>
@@ -90,11 +90,8 @@
 
                 <div class="search-field">
                     <label>Location</label>
-                    <select id="location">
-                        <option value="">USA & Canada</option>
-                        <option>United States</option>
-                        <option>Canada</option>
-                    </select>
+                    <input id="location" type="text" list="globalCountries" placeholder="Any country" autocomplete="country-name">
+                    <datalist id="globalCountries"><option value="USA"><option value="Canada"><option value="Kenya"><option value="United Kingdom"><option value="Germany"><option value="United Arab Emirates"><option value="Australia"><option value="South Africa"><option value="Japan"><option value="India"><option value="Nigeria"><option value="France"></datalist>
                 </div>
 
                 <button class="search-btn" onclick="searchCars()">
@@ -276,7 +273,7 @@
 
             <p>
                 Reach thousands of potential buyers across the
-                USA and Canada. Create your listing in minutes.
+                the world. Create your listing in minutes.
             </p>
 
             <button class="sell-main-btn" type="button" onclick="showPricing()">
@@ -315,7 +312,7 @@
 
         <p>
             The marketplace for buying and selling vehicles
-            across the USA and Canada.
+            worldwide.
         </p>
 
         <div class="footer-links">
