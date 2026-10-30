@@ -392,7 +392,7 @@ app.post("/api/auth/register", async (req, res) => {
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "7d" });
     res.status(201).json({ user, token });
   } catch (error) {
-    if (String(error.message).includes("UNIQUE")) {
+    if (error.code === "23505" || /unique/i.test(String(error.message))) {
       return res.status(409).json({ error: "An account with that email already exists." });
     }
     res.status(500).json({ error: "Could not create account." });
