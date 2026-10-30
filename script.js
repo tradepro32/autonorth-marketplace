@@ -127,15 +127,15 @@ function displayCars(list = cars) {
             <div class="car-info">
                 <p class="car-year">${car.year}</p>
                 <h3>${car.make} ${car.model}</h3>
-                <p class="car-details">${car.mileage.toLocaleString()} miles • ${car.transmission} • ${car.fuel}</p>
+                <div class="car-specs"><span>${car.mileage.toLocaleString()} mi</span><span>${car.transmission}</span><span>${car.fuel}</span></div>
                 ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${formatUSD(car.planPrice)}</div>` : ""}
                 <div class="car-bottom">
                     <strong>${formatUSD(car.price)}</strong>
                     <span>${car.city}, ${car.location}</span>
                 </div>
-                <div style="display:flex;gap:8px;margin-top:10px;">
-                    <button type="button" class="view-details-btn" data-car-id="${car.id}" style="flex:1;">View Details</button>
-                    <button type="button" class="save-car-btn" data-car-id="${car.id}" aria-label="Save car" style="width:48px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:22px;cursor:pointer;">♡</button>
+                <div class="car-actions">
+                    <button type="button" class="view-details-btn" data-car-id="${car.id}">View vehicle <span aria-hidden="true">→</span></button>
+                    <button type="button" class="save-car-btn" data-car-id="${car.id}" aria-label="Save car" aria-pressed="${JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]").includes(Number(car.id))}">${JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]").includes(Number(car.id)) ? "♥" : "♡"}</button>
                 </div>
             </div>
         </article>
@@ -695,10 +695,12 @@ document.addEventListener("click", event => {
         if (index === -1) {
             saved.push(carId);
             saveButton.textContent = "♥";
+            saveButton.setAttribute("aria-pressed", "true");
             saveButton.style.color = "#e63946";
         } else {
             saved.splice(index, 1);
             saveButton.textContent = "♡";
+            saveButton.setAttribute("aria-pressed", "false");
             saveButton.style.color = "";
         }
         localStorage.setItem("autonorth_saved_cars", JSON.stringify(saved));
