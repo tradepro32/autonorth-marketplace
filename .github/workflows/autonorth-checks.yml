@@ -7,8 +7,27 @@ on:
     branches: [feature/postgresql-migration]
 
 jobs:
-  syntax-and-install:
+  syntax-and-postgres-smoke-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: autonorth_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d autonorth_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/autonorth_test
+      JWT_SECRET: ci-only-test-secret-not-for-production
+      NODE_ENV: test
+      PORT: 3187
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -20,3 +39,7 @@ jobs:
         run: npm install
       - name: Check server JavaScript syntax
         run: node --check server.js
+      - name: Check smoke-test JavaScript syntax
+        run: node --check scripts/postgres-smoke-test.js
+      - name: Test PostgreSQL startup and core API routes
+        run: node scripts/postgres-smoke-test.js
