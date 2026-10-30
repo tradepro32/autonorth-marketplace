@@ -1,7 +1,5 @@
 const express = require("express");
-const path = require("path");
-const fs = require("fs");
-const Database = require("better-sqlite3");
+const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -12,13 +10,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET_BEFORE_PRODUCTION";
 
-fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
-const db = new Database(path.join(__dirname, "data", "autonorth.db"));
-db.pragma("journal_mode = WAL");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
+});
 
-db.exec(`
+const schema = `
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   phone TEXT,
@@ -28,7 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS listings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   seller_id INTEGER NOT NULL,
   make TEXT NOT NULL,
   model TEXT NOT NULL,
@@ -49,7 +51,7 @@ CREATE TABLE IF NOT EXISTS listings (
   FOREIGN KEY (seller_id) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS inquiries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   listing_id INTEGER NOT NULL,
   buyer_name TEXT NOT NULL,
   buyer_email TEXT NOT NULL,
@@ -61,7 +63,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
 CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status);
 CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_id);
 CREATE TABLE IF NOT EXISTS phone_verifications (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
   phone TEXT NOT NULL,
   code_hash TEXT NOT NULL,
@@ -72,7 +74,7 @@ CREATE TABLE IF NOT EXISTS phone_verifications (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS seller_verifications (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'unverified',
   document_type TEXT,
@@ -85,7 +87,7 @@ CREATE TABLE IF NOT EXISTS seller_verifications (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS reports (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   reporter_user_id INTEGER,
   listing_id INTEGER,
   reported_user_id INTEGER,
@@ -99,7 +101,7 @@ CREATE TABLE IF NOT EXISTS reports (
   FOREIGN KEY (reported_user_id) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS audit_logs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   user_id INTEGER,
   action TEXT NOT NULL,
   target_type TEXT,
@@ -109,7 +111,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS payments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
   listing_id INTEGER NOT NULL,
   provider TEXT NOT NULL,
@@ -123,9 +125,36 @@ CREATE TABLE IF NOT EXISTS payments (
   FOREIGN KEY (listing_id) REFERENCES listings(id)
 );
 `);
-// Add currency to existing databases without removing existing listings.
-if (!db.pragma("table_info(listings)").some(column => column.name === "currency")) {
-  db.exec("ALTER TABLE listings ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+
+function toPostgresSql(sql) {
+  let index = 0;
+  return sql.replace(/\?/g, () => "$" + (++index));
+}
+const db = {
+  prepare(sql) {
+    const query = toPostgresSql(sql);
+    return {
+      async get(...params) {
+        const result = await pool.query(query, params);
+        return result.rows[0];
+      },
+      async all(...params) {
+        const result = await pool.query(query, params);
+        return result.rows;
+      },
+      async run(...params) {
+        let statement = query;
+        if (/^\s*INSERT\b/i.test(statement) && !/\bRETURNING\b/i.test(statement)) statement += " RETURNING id";
+        const result = await pool.query(statement, params);
+        return { changes: result.rowCount, lastInsertRowid: result.rows[0]?.id };
+      }
+    };
+  }
+};
+
+async function initDatabase() {
+  await pool.query(schema);
+  await pool.query("ALTER TABLE listings ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'USD'");
 }
 
 
@@ -149,8 +178,8 @@ function clean(value, max = 500) {
 function validEmail(value) {
   return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(value));
 }
-function audit(userId, action, targetType, targetId, ip, details = "") {
-  db.prepare("INSERT INTO audit_logs (user_id,action,target_type,target_id,ip,details) VALUES (?,?,?,?,?,?)")
+async function audit(userId, action, targetType, targetId, ip, details = "") {
+  await db.prepare("INSERT INTO audit_logs (user_id,action,target_type,target_id,ip,details) VALUES (?,?,?,?,?,?)")
     .run(userId || null, action, targetType || null, targetId || null, ip || null, clean(details, 1000));
 }
 
@@ -324,7 +353,7 @@ function adminOnly(req, res, next) {
   next();
 }
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
   res.json({ ok: true, service: "AutoNorth API" });
 });
 
@@ -349,7 +378,7 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const normalizedEmail = String(email).trim().toLowerCase();
     const hash = await bcrypt.hash(String(password), 12);
-    const result = db.prepare(
+    const result = await db.prepare(
       "INSERT INTO users (name,email,phone,password_hash) VALUES (?,?,?,?)"
     ).run(String(name).trim(), normalizedEmail, phone || null, hash);
     const user = {
@@ -358,8 +387,8 @@ app.post("/api/auth/register", async (req, res) => {
       email: normalizedEmail,
       role: "seller"
     };
-    db.prepare("INSERT OR IGNORE INTO seller_verifications (user_id) VALUES (?)").run(user.id);
-    audit(user.id, "register", "user", user.id, getClientIp(req));
+    await db.prepare("INSERT INTO seller_verifications (user_id) VALUES (?) ON CONFLICT (user_id) DO NOTHING").run(user.id);
+    await audit(user.id, "register", "user", user.id, getClientIp(req));
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "7d" });
     res.status(201).json({ user, token });
   } catch (error) {
@@ -372,7 +401,7 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
-  const user = db.prepare("SELECT * FROM users WHERE email=?").get(email);
+  const user = await db.prepare("SELECT * FROM users WHERE email=?").get(email);
   if (!user || !(await bcrypt.compare(String(req.body.password || ""), user.password_hash))) {
     return res.status(401).json({ error: "Invalid email or password." });
   }
@@ -384,28 +413,28 @@ app.post("/api/auth/login", async (req, res) => {
     role: user.role,
     phone_verified: user.phone_verified
   };
-  audit(user.id, "login", "user", user.id, getClientIp(req));
+  await audit(user.id, "login", "user", user.id, getClientIp(req));
   res.json({ user: safeUser, token: jwt.sign(safeUser, JWT_SECRET, { expiresIn: "7d" }) });
 });
 
-app.get("/api/me", auth, (req, res) => {
-  const user = db.prepare(
+app.get("/api/me", auth, async (req, res) => {
+  const user = await db.prepare(
     "SELECT id,name,email,phone,role,phone_verified FROM users WHERE id=?"
   ).get(req.user.id);
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json({ user });
 });
 
-app.get("/api/listings", (req, res) => {
-  const listings = db.prepare(
+app.get("/api/listings", async (req, res) => {
+  const listings = await db.prepare(
     "SELECT l.*, u.name AS seller_name FROM listings l JOIN users u ON u.id=l.seller_id WHERE l.status='live' ORDER BY l.created_at DESC"
   ).all();
   res.json({ listings });
 });
 
-app.get("/api/seller/listings", auth, (req, res) => {
+app.get("/api/seller/listings", auth, async (req, res) => {
   res.json({
-    listings: db.prepare(
+    listings: await db.prepare(
       "SELECT * FROM listings WHERE seller_id=? ORDER BY created_at DESC"
     ).all(req.user.id)
   });
@@ -418,7 +447,7 @@ app.post("/api/listings", auth, (req, res, next) => {
     return res.status(429).json({ error: "Too many listings created recently. Please try again later." });
   }
   next();
-}, (req, res) => {
+}, async (req, res) => {
   const d = req.body;
   const year = Number(d.year), price = Number(d.price), mileage = Number(d.mileage) || 0;
   if (!d.make || !d.model || !Number.isInteger(year) || year < 1900 || year > new Date().getFullYear() + 1 || !Number.isFinite(price) || price <= 0 || mileage < 0) {
@@ -426,11 +455,11 @@ app.post("/api/listings", auth, (req, res, next) => {
   }
   const currency = validListingCurrency(d.currency);
   if (!currency) return res.status(400).json({ error: "Unsupported listing currency." });
-  const seller = db.prepare("SELECT phone_verified FROM users WHERE id=?").get(req.user.id);
+  const seller = await db.prepare("SELECT phone_verified FROM users WHERE id=?").get(req.user.id);
   if (!seller?.phone_verified && process.env.REQUIRE_PHONE_FOR_LISTINGS === "true") {
     return res.status(403).json({ error: "Phone verification is required before listing a vehicle.", code: "PHONE_VERIFICATION_REQUIRED" });
   }
-  const result = db.prepare(
+  const result = await db.prepare(
     "INSERT INTO listings (seller_id,make,model,year,price,currency,mileage,transmission,fuel,location,city,image,description,plan,plan_price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
   ).run(
     req.user.id, clean(d.make,80), clean(d.model,80), year,
@@ -439,23 +468,23 @@ app.post("/api/listings", auth, (req, res, next) => {
     d.plan || null, Number(d.planPrice) || 0
   );
   const listingId = Number(result.lastInsertRowid);
-  audit(req.user.id, "listing_created", "listing", listingId, getClientIp(req));
-  res.status(201).json({ listing: db.prepare("SELECT * FROM listings WHERE id=?").get(listingId) });
+  await audit(req.user.id, "listing_created", "listing", listingId, getClientIp(req));
+  res.status(201).json({ listing: await db.prepare("SELECT * FROM listings WHERE id=?").get(listingId) });
 });
 
-app.delete("/api/listings/:id", auth, (req, res) => {
-  const result = db.prepare(
+app.delete("/api/listings/:id", auth, async (req, res) => {
+  const result = await db.prepare(
     "DELETE FROM listings WHERE id=? AND seller_id=?"
   ).run(Number(req.params.id), req.user.id);
   if (!result.changes) return res.status(404).json({ error: "Listing not found" });
-  audit(req.user.id, "listing_status_changed", "listing", Number(req.params.id), getClientIp(req), req.body.status);
+  await audit(req.user.id, "listing_status_changed", "listing", Number(req.params.id), getClientIp(req), req.body.status);
   res.json({ ok: true });
 });
 
 
-app.patch("/api/listings/:id", auth, (req, res) => {
+app.patch("/api/listings/:id", auth, async (req, res) => {
   const d = req.body;
-  const existing = db.prepare(
+  const existing = await db.prepare(
     "SELECT * FROM listings WHERE id=? AND seller_id=?"
   ).get(Number(req.params.id), req.user.id);
   if (!existing) return res.status(404).json({ error: "Listing not found" });
@@ -466,7 +495,7 @@ app.patch("/api/listings/:id", auth, (req, res) => {
   // Sellers may edit a listing, but cannot approve their own listing.
   const nextStatus = existing.status === "live" ? "pending" : "pending";
 
-  db.prepare(`
+  await db.prepare(`
     UPDATE listings SET
       make=?, model=?, year=?, price=?, currency=?, mileage=?, transmission=?, fuel=?,
       location=?, city=?, image=?, description=?, status=?, updated_at=CURRENT_TIMESTAMP
@@ -489,35 +518,35 @@ app.patch("/api/listings/:id", auth, (req, res) => {
     req.user.id
   );
 
-  audit(req.user.id, "listing_updated", "listing", Number(req.params.id), getClientIp(req));
-  res.json({ listing: db.prepare("SELECT * FROM listings WHERE id=?").get(Number(req.params.id)) });
+  await audit(req.user.id, "listing_updated", "listing", Number(req.params.id), getClientIp(req));
+  res.json({ listing: await db.prepare("SELECT * FROM listings WHERE id=?").get(Number(req.params.id)) });
 });
 
-app.post("/api/inquiries", (req, res) => {
+app.post("/api/inquiries", async (req, res) => {
   const d = req.body;
   if (!d.listingId || !d.name || !d.email || !d.message) {
     return res.status(400).json({ error: "All inquiry fields are required." });
   }
-  const listing = db.prepare(
+  const listing = await db.prepare(
     "SELECT id FROM listings WHERE id=? AND status='live'"
   ).get(Number(d.listingId));
   if (!listing) return res.status(404).json({ error: "Listing not found" });
-  const result = db.prepare(
+  const result = await db.prepare(
     "INSERT INTO inquiries (listing_id,buyer_name,buyer_email,message) VALUES (?,?,?,?)"
   ).run(Number(d.listingId), String(d.name).trim(), String(d.email).trim(), String(d.message).trim());
   res.status(201).json({ inquiryId: Number(result.lastInsertRowid) });
 });
 
-app.get("/api/seller/inquiries", auth, (req, res) => {
-  const inquiries = db.prepare(
+app.get("/api/seller/inquiries", auth, async (req, res) => {
+  const inquiries = await db.prepare(
     "SELECT i.*,l.make,l.model,l.year FROM inquiries i JOIN listings l ON l.id=i.listing_id WHERE l.seller_id=? ORDER BY i.created_at DESC"
   ).all(req.user.id);
   res.json({ inquiries });
 });
 
-app.get("/api/admin/listings", auth, adminOnly, (req, res) => {
+app.get("/api/admin/listings", auth, adminOnly, async (req, res) => {
   res.json({
-    listings: db.prepare(
+    listings: await db.prepare(
       "SELECT l.*,u.name AS seller_name,u.email AS seller_email FROM listings l JOIN users u ON u.id=l.seller_id ORDER BY l.created_at DESC"
     ).all()
   });
@@ -530,9 +559,9 @@ app.post("/api/phone/send-code", auth, async (req, res) => {
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const hash = await bcrypt.hash(code, 10);
   const expires = Date.now() + 10 * 60 * 1000;
-  db.prepare("UPDATE phone_verifications SET used=1 WHERE user_id=? AND used=0").run(req.user.id);
-  db.prepare("INSERT INTO phone_verifications (user_id,phone,code_hash,expires_at) VALUES (?,?,?,?)").run(req.user.id, phone, hash, expires);
-  db.prepare("UPDATE users SET phone=? WHERE id=?").run(phone, req.user.id);
+  await db.prepare("UPDATE phone_verifications SET used=1 WHERE user_id=? AND used=0").run(req.user.id);
+  await db.prepare("INSERT INTO phone_verifications (user_id,phone,code_hash,expires_at) VALUES (?,?,?,?)").run(req.user.id, phone, hash, expires);
+  await db.prepare("UPDATE users SET phone=? WHERE id=?").run(phone, req.user.id);
 
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER) {
     const body = new URLSearchParams({ To: phone, From: process.env.TWILIO_FROM_NUMBER, Body: "Your AutoNorth verification code is " + code });
@@ -545,7 +574,7 @@ app.post("/api/phone/send-code", auth, async (req, res) => {
     return res.status(503).json({ error: "Phone verification is not configured yet." });
   }
 
-  audit(req.user.id, "phone_code_sent", "user", req.user.id, getClientIp(req));
+  await audit(req.user.id, "phone_code_sent", "user", req.user.id, getClientIp(req));
   const response = { ok: true, message: "Verification code sent." };
   // Development-only helper so the local Codespace can test the complete flow without real SMS credentials.
   if (process.env.NODE_ENV !== "production") response.devCode = code;
@@ -554,90 +583,90 @@ app.post("/api/phone/send-code", auth, async (req, res) => {
 
 app.post("/api/phone/verify", auth, async (req, res) => {
   const code = clean(req.body.code, 10);
-  const record = db.prepare("SELECT * FROM phone_verifications WHERE user_id=? AND used=0 ORDER BY id DESC LIMIT 1").get(req.user.id);
+  const record = await db.prepare("SELECT * FROM phone_verifications WHERE user_id=? AND used=0 ORDER BY id DESC LIMIT 1").get(req.user.id);
   if (!record || Date.now() > record.expires_at || record.attempts >= 5) return res.status(400).json({ error: "Verification code is invalid or expired." });
   const ok = await bcrypt.compare(code, record.code_hash);
-  db.prepare("UPDATE phone_verifications SET attempts=attempts+1 WHERE id=?").run(record.id);
+  await db.prepare("UPDATE phone_verifications SET attempts=attempts+1 WHERE id=?").run(record.id);
   if (!ok) {
     recordSuspiciousActivity(getClientIp(req), "phone-verification-failure");
     return res.status(400).json({ error: "Verification code is invalid or expired." });
   }
-  db.prepare("UPDATE phone_verifications SET used=1 WHERE id=?").run(record.id);
-  db.prepare("UPDATE users SET phone_verified=1 WHERE id=?").run(req.user.id);
-  audit(req.user.id, "phone_verified", "user", req.user.id, getClientIp(req));
+  await db.prepare("UPDATE phone_verifications SET used=1 WHERE id=?").run(record.id);
+  await db.prepare("UPDATE users SET phone_verified=1 WHERE id=?").run(req.user.id);
+  await audit(req.user.id, "phone_verified", "user", req.user.id, getClientIp(req));
   res.json({ ok: true, phone_verified: true });
 });
 
-app.post("/api/verifications/seller", auth, (req, res) => {
+app.post("/api/verifications/seller", auth, async (req, res) => {
   const documentType = clean(req.body.documentType, 40);
   if (!["national_id", "passport", "business_registration"].includes(documentType)) {
     return res.status(400).json({ error: "Select a supported verification document." });
   }
-  db.prepare("INSERT INTO seller_verifications (user_id,status,document_type,document_reference,notes,updated_at) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET status='pending',document_type=excluded.document_type,document_reference=excluded.document_reference,notes=excluded.notes,updated_at=CURRENT_TIMESTAMP")
+  await db.prepare("INSERT INTO seller_verifications (user_id,status,document_type,document_reference,notes,updated_at) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET status='pending',document_type=excluded.document_type,document_reference=excluded.document_reference,notes=excluded.notes,updated_at=CURRENT_TIMESTAMP")
     .run(req.user.id, "pending", documentType, clean(req.body.documentReference, 120), clean(req.body.notes, 500));
-  audit(req.user.id, "seller_verification_submitted", "user", req.user.id, getClientIp(req));
+  await audit(req.user.id, "seller_verification_submitted", "user", req.user.id, getClientIp(req));
   res.json({ ok: true, status: "pending" });
 });
 
-app.get("/api/me/security", auth, (req, res) => {
-  const user = db.prepare("SELECT id,phone_verified FROM users WHERE id=?").get(req.user.id);
-  const verification = db.prepare("SELECT status,document_type,created_at,updated_at FROM seller_verifications WHERE user_id=?").get(req.user.id);
+app.get("/api/me/security", auth, async (req, res) => {
+  const user = await db.prepare("SELECT id,phone_verified FROM users WHERE id=?").get(req.user.id);
+  const verification = await db.prepare("SELECT status,document_type,created_at,updated_at FROM seller_verifications WHERE user_id=?").get(req.user.id);
   res.json({ phoneVerified: Boolean(user?.phone_verified), sellerVerification: verification || { status: "unverified" } });
 });
 
-app.post("/api/reports", auth, (req, res) => {
+app.post("/api/reports", auth, async (req, res) => {
   const listingId = req.body.listingId ? Number(req.body.listingId) : null;
   const reportedUserId = req.body.reportedUserId ? Number(req.body.reportedUserId) : null;
   const reason = clean(req.body.reason, 80);
   const details = clean(req.body.details, 1000);
   const allowed = ["suspected_scam","fake_vehicle","incorrect_information","stolen_vehicle_concern","fake_documents","payment_scam","harassment","other"];
   if (!allowed.includes(reason) || (!listingId && !reportedUserId)) return res.status(400).json({ error: "A valid report target and reason are required." });
-  if (listingId && !db.prepare("SELECT id FROM listings WHERE id=?").get(listingId)) return res.status(404).json({ error: "Listing not found." });
-  const result = db.prepare("INSERT INTO reports (reporter_user_id,listing_id,reported_user_id,reason,details) VALUES (?,?,?,?,?)").run(req.user.id,listingId,reportedUserId,reason,details);
-  audit(req.user.id, "report_created", "report", Number(result.lastInsertRowid), getClientIp(req), reason);
+  if (listingId && !await db.prepare("SELECT id FROM listings WHERE id=?").get(listingId)) return res.status(404).json({ error: "Listing not found." });
+  const result = await db.prepare("INSERT INTO reports (reporter_user_id,listing_id,reported_user_id,reason,details) VALUES (?,?,?,?,?)").run(req.user.id,listingId,reportedUserId,reason,details);
+  await audit(req.user.id, "report_created", "report", Number(result.lastInsertRowid), getClientIp(req), reason);
   res.status(201).json({ ok: true, reportId: Number(result.lastInsertRowid) });
 });
 
-app.get("/api/admin/reports", auth, adminOnly, (req, res) => {
-  res.json({ reports: db.prepare("SELECT r.*,l.make,l.model,u.name AS reporter_name FROM reports r LEFT JOIN listings l ON l.id=r.listing_id LEFT JOIN users u ON u.id=r.reporter_user_id ORDER BY r.created_at DESC").all() });
+app.get("/api/admin/reports", auth, adminOnly, async (req, res) => {
+  res.json({ reports: await db.prepare("SELECT r.*,l.make,l.model,u.name AS reporter_name FROM reports r LEFT JOIN listings l ON l.id=r.listing_id LEFT JOIN users u ON u.id=r.reporter_user_id ORDER BY r.created_at DESC").all() });
 });
 
-app.patch("/api/admin/reports/:id", auth, adminOnly, (req, res) => {
+app.patch("/api/admin/reports/:id", auth, adminOnly, async (req, res) => {
   const allowed = ["open","reviewing","resolved","dismissed"];
   if (!allowed.includes(req.body.status)) return res.status(400).json({ error: "Invalid report status." });
-  const result = db.prepare("UPDATE reports SET status=?,reviewed_at=CURRENT_TIMESTAMP WHERE id=?").run(req.body.status,Number(req.params.id));
+  const result = await db.prepare("UPDATE reports SET status=?,reviewed_at=CURRENT_TIMESTAMP WHERE id=?").run(req.body.status,Number(req.params.id));
   if (!result.changes) return res.status(404).json({ error: "Report not found." });
-  audit(req.user.id,"report_reviewed","report",Number(req.params.id),getClientIp(req),req.body.status);
+  await audit(req.user.id,"report_reviewed","report",Number(req.params.id),getClientIp(req),req.body.status);
   res.json({ ok:true });
 });
 
-app.get("/api/admin/security", auth, adminOnly, (req, res) => {
+app.get("/api/admin/security", auth, adminOnly, async (req, res) => {
   res.json({
     suspicious: Array.from(suspiciousActivity.entries()).map(([ip,v]) => ({ ip, count:v.count, reasons:v.reasons })),
-    recentAudit: db.prepare("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 100").all()
+    recentAudit: await db.prepare("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 100").all()
   });
 });
 
-app.get("/api/admin/verifications", auth, adminOnly, (req, res) => {
-  res.json({ verifications: db.prepare("SELECT s.*,u.name,u.email,u.phone,u.phone_verified FROM seller_verifications s JOIN users u ON u.id=s.user_id ORDER BY s.updated_at DESC").all() });
+app.get("/api/admin/verifications", auth, adminOnly, async (req, res) => {
+  res.json({ verifications: await db.prepare("SELECT s.*,u.name,u.email,u.phone,u.phone_verified FROM seller_verifications s JOIN users u ON u.id=s.user_id ORDER BY s.updated_at DESC").all() });
 });
 
-app.patch("/api/admin/verifications/:userId", auth, adminOnly, (req, res) => {
+app.patch("/api/admin/verifications/:userId", auth, adminOnly, async (req, res) => {
   const allowed = ["unverified","pending","verified","rejected"];
   if (!allowed.includes(req.body.status)) return res.status(400).json({ error:"Invalid verification status." });
   const userId=Number(req.params.userId);
-  const result=db.prepare("UPDATE seller_verifications SET status=?,reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE user_id=?").run(req.body.status,req.user.id,userId);
+  const result=await db.prepare("UPDATE seller_verifications SET status=?,reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE user_id=?").run(req.body.status,req.user.id,userId);
   if (!result.changes) return res.status(404).json({error:"Verification request not found."});
-  audit(req.user.id,"seller_verification_reviewed","user",userId,getClientIp(req),req.body.status);
+  await audit(req.user.id,"seller_verification_reviewed","user",userId,getClientIp(req),req.body.status);
   res.json({ok:true});
 });
 
-app.patch("/api/admin/listings/:id/status", auth, adminOnly, (req, res) => {
+app.patch("/api/admin/listings/:id/status", auth, adminOnly, async (req, res) => {
   const allowed = ["pending", "live", "rejected", "sold"];
   if (!allowed.includes(req.body.status)) {
     return res.status(400).json({ error: "Invalid status" });
   }
-  const result = db.prepare(
+  const result = await db.prepare(
     "UPDATE listings SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?"
   ).run(req.body.status, Number(req.params.id));
   if (!result.changes) return res.status(404).json({ error: "Listing not found" });
@@ -646,6 +675,11 @@ app.patch("/api/admin/listings/:id/status", auth, adminOnly, (req, res) => {
 
 app.use(express.static(__dirname));
 
-app.listen(PORT, () => {
-  console.log("AutoNorth API running on port " + PORT);
+initDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log("AutoNorth API running on port " + PORT + " with PostgreSQL");
+  });
+}).catch(error => {
+  console.error("Could not initialize PostgreSQL:", error);
+  process.exit(1);
 });
