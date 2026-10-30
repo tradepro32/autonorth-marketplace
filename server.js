@@ -647,7 +647,7 @@ app.patch("/api/admin/listings/:id/status", auth, adminOnly, (req, res) => {
 
 // PayPal Sandbox integration. Never expose the secret to the browser.
 const PAYPAL_PLANS = Object.freeze({ Basic: "9.99", Featured: "19.99", Premium: "29.99" });
-const PAYPAL_BASE = process.env.PAYPAL_ENV === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+const PAYPAL_BASE = "https://api-m.sandbox.paypal.com"; // Live payments intentionally disabled until separately reviewed.
 async function paypalAccessToken() {
   if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) throw new Error("PayPal credentials are not configured");
   const basic = Buffer.from(process.env.PAYPAL_CLIENT_ID + ":" + process.env.PAYPAL_CLIENT_SECRET).toString("base64");
@@ -667,7 +667,7 @@ function paypalError(res, error) {
   return res.status(502).json({ error: "Payment service unavailable. Please try again." });
 }
 app.get("/api/paypal/config", (req, res) => {
-  res.json({ enabled: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET), environment: process.env.PAYPAL_ENV === "live" ? "live" : "sandbox", clientId: process.env.PAYPAL_CLIENT_ID || null, currency: "USD" });
+  res.json({ enabled: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET), environment: "sandbox", clientId: process.env.PAYPAL_CLIENT_ID || null, currency: "USD" });
 });
 app.post("/api/paypal/orders", auth, async (req, res) => {
   const listing = db.prepare("SELECT * FROM listings WHERE id=? AND seller_id=?").get(Number(req.body.listingId), req.user.id);
