@@ -13,16 +13,16 @@
 
     <!-- NAVIGATION -->
     <header class="navbar">
-        <div class="logo">
-            Auto<span>North</span>
-        </div>
+        <a class="logo" href="#top" aria-label="AutoNorth home">Auto<span>North</span><span class="logo-mark" aria-hidden="true">.</span></a>
 
-        <nav>
+        <nav id="primaryNavigation" aria-label="Main navigation">
             <a href="#top">Home</a>
             <a href="#cars">Browse Cars</a>
             <a href="#sell">Sell Your Car</a>
             <a href="#about">About</a>
         </nav>
+
+        <button class="mobile-menu-toggle" type="button" aria-controls="primaryNavigation" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button>
 
         <div class="nav-actions">
             <button class="login-btn" type="button" onclick="showSavedCars()"><svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg> Saved Cars</button>
@@ -38,17 +38,18 @@
 
         <div class="hero-content">
 
-            <p class="hero-label">USA &amp; CANADA</p>
+            <p class="hero-label"><span class="status-dot" aria-hidden="true"></span> THE USA &amp; CANADA CAR MARKETPLACE</p>
 
             <h1>
-                Find Your<br>
-                <span>Next Car.</span>
+                Your next drive<br>
+                <span>starts here.</span>
             </h1>
 
             <p class="hero-text">
-                Discover thousands of vehicles from trusted sellers
-                across the USA and Canada.
+                Explore vehicles, compare your options and connect with sellers across the USA and Canada.
             </p>
+
+            <div class="hero-quicklinks"><a href="#cars">Explore vehicles <span aria-hidden="true">→</span></a><button type="button" onclick="showPricing()">List a vehicle <span aria-hidden="true">↗</span></button></div>
 
             <!-- SEARCH BOX -->
             <div class="search-box">
@@ -107,13 +108,15 @@
     </section>
 
 
+    <section class="benefits-strip" aria-label="Marketplace features"><div><strong>Find your fit</strong><span>Search by make, budget and location</span></div><div><strong>Save favourites</strong><span>Keep the cars you want to revisit</span></div><div><strong>Sell with ease</strong><span>Choose a plan and create a listing</span></div></section>
+
     <!-- FEATURED CARS -->
     <section class="cars-section" id="cars">
 
         <div class="section-heading">
             <div>
                 <p class="section-label">EXPLORE</p>
-                <h2>Featured Vehicles</h2>
+                <h2>Find a car worth the drive.</h2><p class="section-subtitle">Explore the latest selection and filter by what matters to you.</p><p id="marketplaceResultsCount" class="results-count" aria-live="polite"></p>
             </div>
             <div class="marketplace-tools">
                 <label>Sort
@@ -330,6 +333,7 @@
 
     <script>window.AUTO_NORTH_TEST = true; console.log("AutoNorth JavaScript loaded V11");</script>
 <script src="script.js?v=21"></script>
+<script src="navigation.js" defer></script>
 
 </body>
 </html>
