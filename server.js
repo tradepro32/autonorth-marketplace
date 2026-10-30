@@ -354,7 +354,13 @@ function adminOnly(req, res, next) {
 }
 
 app.get("/api/health", async (req, res) => {
-  res.json({ ok: true, service: "AutoNorth API" });
+  try {
+    await pool.query("SELECT 1");
+    res.json({ ok: true, service: "AutoNorth API", database: "connected" });
+  } catch (error) {
+    console.error("PostgreSQL health check failed:", error);
+    res.status(503).json({ ok: false, service: "AutoNorth API", database: "unavailable" });
+  }
 });
 
 app.use(["/api/auth/register", "/api/auth/login"], (req, res, next) => {
