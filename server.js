@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS payments (
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (listing_id) REFERENCES listings(id)
 );
-`);
+`;
 
 function toPostgresSql(sql) {
   let index = 0;
