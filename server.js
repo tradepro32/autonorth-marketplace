@@ -5,6 +5,9 @@ const Database = require("better-sqlite3");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const LISTING_CURRENCIES = new Set(["USD","EUR","GBP","KES","CAD","AUD","AED","NGN","ZAR","JPY","INR","CHF","CNY","GHS","UGX","TZS","RWF","NZD","SGD","BRL","MXN"]);
+const validListingCurrency = value => LISTING_CURRENCIES.has(String(value || "USD").toUpperCase()) ? String(value || "USD").toUpperCase() : null;
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET_BEFORE_PRODUCTION";
@@ -120,6 +123,11 @@ CREATE TABLE IF NOT EXISTS payments (
   FOREIGN KEY (listing_id) REFERENCES listings(id)
 );
 `);
+// Add currency to existing databases without removing existing listings.
+if (!db.pragma("table_info(listings)").some(column => column.name === "currency")) {
+  db.exec("ALTER TABLE listings ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+}
+
 
 app.use(express.json({ limit: "1mb" }));
 
@@ -416,15 +424,17 @@ app.post("/api/listings", auth, (req, res, next) => {
   if (!d.make || !d.model || !Number.isInteger(year) || year < 1900 || year > new Date().getFullYear() + 1 || !Number.isFinite(price) || price <= 0 || mileage < 0) {
     return res.status(400).json({ error: "Enter valid vehicle, year, price and mileage details." });
   }
+  const currency = validListingCurrency(d.currency);
+  if (!currency) return res.status(400).json({ error: "Unsupported listing currency." });
   const seller = db.prepare("SELECT phone_verified FROM users WHERE id=?").get(req.user.id);
   if (!seller?.phone_verified && process.env.REQUIRE_PHONE_FOR_LISTINGS === "true") {
     return res.status(403).json({ error: "Phone verification is required before listing a vehicle.", code: "PHONE_VERIFICATION_REQUIRED" });
   }
   const result = db.prepare(
-    "INSERT INTO listings (seller_id,make,model,year,price,mileage,transmission,fuel,location,city,image,description,plan,plan_price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    "INSERT INTO listings (seller_id,make,model,year,price,currency,mileage,transmission,fuel,location,city,image,description,plan,plan_price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
   ).run(
     req.user.id, clean(d.make,80), clean(d.model,80), year,
-    price, mileage, d.transmission || null, d.fuel || null,
+    price, currency, mileage, d.transmission || null, d.fuel || null,
     d.location || null, d.city || null, d.image || null, d.description || null,
     d.plan || null, Number(d.planPrice) || 0
   );
@@ -450,12 +460,15 @@ app.patch("/api/listings/:id", auth, (req, res) => {
   ).get(Number(req.params.id), req.user.id);
   if (!existing) return res.status(404).json({ error: "Listing not found" });
 
+  const currency = validListingCurrency(d.currency ?? existing.currency);
+  if (!currency) return res.status(400).json({ error: "Unsupported listing currency." });
+
   // Sellers may edit a listing, but cannot approve their own listing.
   const nextStatus = existing.status === "live" ? "pending" : "pending";
 
   db.prepare(`
     UPDATE listings SET
-      make=?, model=?, year=?, price=?, mileage=?, transmission=?, fuel=?,
+      make=?, model=?, year=?, price=?, currency=?, mileage=?, transmission=?, fuel=?,
       location=?, city=?, image=?, description=?, status=?, updated_at=CURRENT_TIMESTAMP
     WHERE id=? AND seller_id=?
   `).run(
@@ -463,6 +476,7 @@ app.patch("/api/listings/:id", auth, (req, res) => {
     String(d.model || existing.model).trim(),
     Number(d.year || existing.year),
     Number(d.price || existing.price),
+    currency,
     Number(d.mileage ?? existing.mileage ?? 0),
     d.transmission || existing.transmission,
     d.fuel || existing.fuel,
