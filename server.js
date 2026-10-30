@@ -176,7 +176,7 @@ function clean(value, max = 500) {
   return String(value ?? "").trim().slice(0, max);
 }
 function validEmail(value) {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(value));
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value));
 }
 async function audit(userId, action, targetType, targetId, ip, details = "") {
   await db.prepare("INSERT INTO audit_logs (user_id,action,target_type,target_id,ip,details) VALUES (?,?,?,?,?,?)")
