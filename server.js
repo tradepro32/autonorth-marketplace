@@ -483,7 +483,7 @@ app.delete("/api/listings/:id", auth, async (req, res) => {
     "DELETE FROM listings WHERE id=? AND seller_id=?"
   ).run(Number(req.params.id), req.user.id);
   if (!result.changes) return res.status(404).json({ error: "Listing not found" });
-  await audit(req.user.id, "listing_status_changed", "listing", Number(req.params.id), getClientIp(req), req.body.status);
+  await audit(req.user.id, "listing_deleted", "listing", Number(req.params.id), getClientIp(req));
   res.json({ ok: true });
 });
 
