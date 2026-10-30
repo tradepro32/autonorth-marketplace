@@ -1081,7 +1081,23 @@ async function showSellerDashboard(){
    document.getElementById("retryDashboard").onclick=()=>showSellerDashboard();
  }
 }
-function deleteUserListing(id){const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").filter(x=>x.id!==id);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(x=>x.id===id);if(i>=0)cars.splice(i,1);displayCars();showSellerDashboard();}
+async function deleteUserListing(id){
+  if(!window.confirm("Delete this vehicle listing? This cannot be undone.")) return;
+  const button=document.querySelector('.dashboard-delete[data-id="'+id+'"]');
+  if(button){button.disabled=true;button.textContent="Deleting...";}
+  try{
+    await apiRequest("/listings/"+encodeURIComponent(id), {method:"DELETE"});
+    const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").filter(x=>Number(x.id)!==Number(id));
+    localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));
+    const i=cars.findIndex(x=>Number(x.id)===Number(id));
+    if(i>=0)cars.splice(i,1);
+    displayCars();
+    await showSellerDashboard();
+  }catch(err){
+    if(button){button.disabled=false;button.textContent="Delete";}
+    window.alert(err.message||"Could not delete the listing. Please try again.");
+  }
+}
 function adminRemoveListing(id){const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").filter(x=>x.id!==id);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(x=>x.id===id);if(i>=0)cars.splice(i,1);displayCars();showAdminDashboard();}
 
 function showEditListingForm(x){
