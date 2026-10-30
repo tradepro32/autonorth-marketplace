@@ -488,7 +488,7 @@ function showPricing() {
                 </div>
             </div>
 
-            <p class="pricing-note">Payment processing will be connected before launch. This current version is a working demo and does not charge you.</p>
+            <p class="pricing-note">Listing payments use PayPal. Sandbox testing is available when configured; no real charges in Sandbox.</p>
         </div>
     `;
 
@@ -536,7 +536,7 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     <label style="grid-column:1/-1;">Description<textarea name="description" rows="4" placeholder="Tell buyers about the vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea></label>
                 </div>
                 <button type="submit" id="saveListingButton" style="width:100%;margin-top:20px;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;font-size:16px;cursor:pointer;">Save Listing — ${plan}</button>
-                <p style="font-size:12px;color:#6b7280;margin-top:10px;text-align:center;">Payment is still demo-only. Your listing will be stored in the database as pending.</p>
+                <p style="font-size:12px;color:#6b7280;margin-top:10px;text-align:center;">Your listing will be saved as pending. Complete PayPal checkout to pay the listing fee.</p>
             </form>
         </div>
     `;
@@ -593,11 +593,35 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                         <span style="float:right;font-weight:800;color:#e63946;">${formatUSD(planPrice)}</span>
                         <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Status: Pending</p>
                     </div>
-                    <p style="font-size:12px;color:#6b7280;line-height:1.5;">The listing is now in your database-backed Seller Dashboard. Real payment and automatic activation will be connected next.</p>
-                    <button type="button" id="finishListing" style="width:100%;padding:14px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Open Seller Dashboard</button>
+                    <p style="font-size:12px;color:#6b7280;line-height:1.5;">The listing is now in your database-backed Seller Dashboard. PayPal payment is required. Payment does not bypass listing review.</p>
+                    <div id="paypalListingCheckout" style="margin-bottom:12px;"></div><button type="button" id="finishListing" style="width:100%;padding:14px;border:0;border-radius:8px;background:#111827;color:white;font-weight:800;cursor:pointer;">Open Seller Dashboard</button>
                 </div>
             `;
             document.body.appendChild(liveModal);
+            const checkout = document.getElementById("paypalListingCheckout");
+            try {
+                const config = await apiRequest("/paypal/config");
+                if (config.enabled && config.clientId) {
+                    checkout.innerHTML = '<p style="font-size:12px;color:#6b7280;">PayPal ' + config.environment + ' checkout (USD)</p><div id="paypal-buttons"></div>';
+                    if (!window.paypal) {
+                        await new Promise((resolve, reject) => {
+                            const script = document.createElement("script");
+                            script.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(config.clientId) + "&currency=USD&intent=capture";
+                            script.onload = resolve; script.onerror = reject; document.head.appendChild(script);
+                        });
+                    }
+                    window.paypal.Buttons({
+                        createOrder: async () => (await apiRequest("/paypal/orders", { method:"POST", body:JSON.stringify({ listingId: listing.id }) })).orderId,
+                        onApprove: async data => {
+                            try {
+                                await apiRequest("/paypal/orders/" + encodeURIComponent(data.orderID) + "/capture", {method:"POST", body:"{}"});
+                                checkout.textContent = "Payment verified. Your listing remains pending review.";
+                            } catch (error) { checkout.textContent = error.message; }
+                        },
+                        onError: () => { checkout.textContent = "PayPal checkout could not be completed. No listing has been activated."; }
+                    }).render("#paypal-buttons");
+                } else checkout.textContent = "PayPal is not configured yet. Your listing is saved as pending; no charge was made.";
+            } catch (error) { checkout.textContent = "PayPal checkout unavailable. Your listing remains pending."; }
             document.getElementById("finishListing").onclick = () => {
                 liveModal.remove();
                 showSellerDashboard();

@@ -644,6 +644,61 @@ app.patch("/api/admin/listings/:id/status", auth, adminOnly, (req, res) => {
   res.json({ ok: true });
 });
 
+
+// PayPal Sandbox integration. Never expose the secret to the browser.
+const PAYPAL_PLANS = Object.freeze({ Basic: "9.99", Featured: "19.99", Premium: "29.99" });
+const PAYPAL_BASE = "https://api-m.sandbox.paypal.com"; // Live payments intentionally disabled until separately reviewed.
+async function paypalAccessToken() {
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) throw new Error("PayPal credentials are not configured");
+  const basic = Buffer.from(process.env.PAYPAL_CLIENT_ID + ":" + process.env.PAYPAL_CLIENT_SECRET).toString("base64");
+  const response = await fetch(PAYPAL_BASE + "/v1/oauth2/token", { method: "POST", headers: { Authorization: "Basic " + basic, "Content-Type": "application/x-www-form-urlencoded" }, body: "grant_type=client_credentials" });
+  if (!response.ok) throw new Error("PayPal authentication failed");
+  return (await response.json()).access_token;
+}
+async function paypalApi(route, method, body) {
+  const token = await paypalAccessToken();
+  const response = await fetch(PAYPAL_BASE + route, { method, headers: { Authorization: "Bearer " + token, "Content-Type": "application/json", Prefer: "return=representation" }, ...(body ? {body: JSON.stringify(body)} : {}) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error("PayPal request failed: " + response.status);
+  return data;
+}
+function paypalError(res, error) {
+  console.error("PayPal integration error:", error.message);
+  return res.status(502).json({ error: "Payment service unavailable. Please try again." });
+}
+app.get("/api/paypal/config", (req, res) => {
+  res.json({ enabled: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET), environment: "sandbox", clientId: process.env.PAYPAL_CLIENT_ID || null, currency: "USD" });
+});
+app.post("/api/paypal/orders", auth, async (req, res) => {
+  const listing = db.prepare("SELECT * FROM listings WHERE id=? AND seller_id=?").get(Number(req.body.listingId), req.user.id);
+  if (!listing) return res.status(404).json({ error: "Listing not found" });
+  const amount = PAYPAL_PLANS[listing.plan];
+  if (!amount) return res.status(400).json({ error: "Invalid listing plan" });
+  const paid = db.prepare("SELECT id FROM payments WHERE listing_id=? AND provider='paypal' AND status='completed'").get(listing.id);
+  if (paid) return res.status(409).json({ error: "This listing is already paid" });
+  try {
+    const order = await paypalApi("/v2/checkout/orders", "POST", { intent: "CAPTURE", purchase_units: [{ reference_id: String(listing.id), custom_id: String(listing.id), amount: { currency_code: "USD", value: amount }, description: "AutoNorth " + listing.plan + " listing" }] });
+    db.prepare("INSERT INTO payments (user_id,listing_id,provider,provider_reference,amount,currency,status) VALUES (?,?,'paypal',?,?,'USD','pending')").run(req.user.id, listing.id, order.id, Number(amount));
+    res.json({ orderId: order.id });
+  } catch (error) { paypalError(res, error); }
+});
+app.post("/api/paypal/orders/:orderId/capture", auth, async (req, res) => {
+  const payment = db.prepare("SELECT p.*, l.plan, l.status AS listing_status FROM payments p JOIN listings l ON l.id=p.listing_id WHERE p.provider='paypal' AND p.provider_reference=? AND p.user_id=?").get(String(req.params.orderId), req.user.id);
+  if (!payment) return res.status(404).json({ error: "Payment order not found" });
+  if (payment.status === "completed") return res.json({ ok: true, listingId: payment.listing_id, status: "completed" });
+  if (payment.amount !== Number(PAYPAL_PLANS[payment.plan]) || payment.currency !== "USD") return res.status(409).json({ error: "Listing plan changed; contact support" });
+  try {
+    const order = await paypalApi("/v2/checkout/orders/" + encodeURIComponent(req.params.orderId) + "/capture", "POST", {});
+    const capture = order.purchase_units?.[0]?.payments?.captures?.[0];
+    if (order.status !== "COMPLETED" || capture?.status !== "COMPLETED" || capture.amount?.currency_code !== "USD" || capture.amount?.value !== PAYPAL_PLANS[payment.plan] || order.purchase_units?.[0]?.custom_id !== String(payment.listing_id)) return res.status(409).json({ error: "Payment could not be verified" });
+    db.transaction(() => {
+      db.prepare("UPDATE payments SET status='completed',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending'").run(payment.id);
+      // Payment does not bypass marketplace moderation: listing remains pending.
+    })();
+    res.json({ ok: true, listingId: payment.listing_id, status: "completed", listingStatus: "pending" });
+  } catch (error) { paypalError(res, error); }
+});
+
 app.use(express.static(__dirname));
 
 app.listen(PORT, () => {
