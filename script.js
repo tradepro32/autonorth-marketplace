@@ -791,7 +791,7 @@ document.addEventListener("click", event => {
             saveButton.style.color = "#e63946";
         } else {
             saved.splice(index, 1);
-            saveButton.textContent = "♥";
+            saveButton.textContent = "♡";
             saveButton.setAttribute("aria-pressed", "false");
             saveButton.style.color = "";
         }
