@@ -487,11 +487,11 @@ function showPricing() {
                         <p class="pricing-description">A simple, affordable way to put your vehicle in front of AutoNorth buyers.</p>
                     </div>
                     <ul class="pricing-features">
-                        <li>? 1 vehicle listing</li>
-                        <li>? Standard search visibility</li>
-                        <li>? Vehicle photos & full details</li>
-                        <li>? Buyer inquiries</li>
-                        <li>? 30-day listing period</li>
+                        <li>✓ 1 vehicle listing</li>
+                        <li>✓ Standard search visibility</li>
+                        <li>✓ Vehicle photos & full details</li>
+                        <li>✓ Buyer inquiries</li>
+                        <li>✓ 30-day listing period</li>
                     </ul>
                     <button type="button" class="choose-plan pricing-button pricing-button-dark" data-plan="Basic" data-price="9.99">Choose Basic</button>
                 </div>
@@ -505,11 +505,11 @@ function showPricing() {
                         <p class="pricing-description">Give your vehicle extra visibility and make it easier for buyers to notice.</p>
                     </div>
                     <ul class="pricing-features">
-                        <li>? Everything in Basic</li>
-                        <li>? Featured badge on your listing</li>
-                        <li>? Priority placement in listings</li>
-                        <li>? Extra visibility for your vehicle</li>
-                        <li>? 30-day listing period</li>
+                        <li>✓ Everything in Basic</li>
+                        <li>✓ Featured badge on your listing</li>
+                        <li>✓ Priority placement in listings</li>
+                        <li>✓ Extra visibility for your vehicle</li>
+                        <li>✓ 30-day listing period</li>
                     </ul>
                     <button type="button" class="choose-plan pricing-button pricing-button-red" data-plan="Featured" data-price="19.99">Choose Featured</button>
                 </div>
@@ -522,11 +522,11 @@ function showPricing() {
                         <p class="pricing-description">For sellers who want their vehicle to stand out with the highest available placement.</p>
                     </div>
                     <ul class="pricing-features">
-                        <li>? Everything in Featured</li>
-                        <li>? Premium badge & highlighted listing</li>
-                        <li>? Top placement for stronger visibility</li>
-                        <li>? Maximum marketplace exposure</li>
-                        <li>? 60-day listing period</li>
+                        <li>✓ Everything in Featured</li>
+                        <li>✓ Premium badge & highlighted listing</li>
+                        <li>✓ Top placement for stronger visibility</li>
+                        <li>✓ Maximum marketplace exposure</li>
+                        <li>✓ 60-day listing period</li>
                     </ul>
                     <button type="button" class="choose-plan pricing-button pricing-button-dark" data-plan="Premium" data-price="29.99">Choose Premium</button>
                 </div>
@@ -628,7 +628,7 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     <h2 style="font-size:30px;margin:6px 0 10px;">Your listing is saved</h2>
                     <p style="color:#6b7280;line-height:1.6;">${listing.year} ${listing.make} ${listing.model} has been saved to your seller account.</p>
                     <div class="checkout-process-steps" style="margin:20px 0;">
-                        <span class="done">? Vehicle details</span>
+                        <span class="done">✓ Vehicle details</span>
                         <span class="active">2. Payment</span>
                         <span>3. Listing live</span>
                     </div>
