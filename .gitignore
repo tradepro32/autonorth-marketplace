@@ -1,0 +1,14 @@
+﻿# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local backups
+*.backup.js
+*.bak
+
+# Logs
+npm-debug.log*

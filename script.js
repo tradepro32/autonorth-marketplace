@@ -131,14 +131,14 @@ function displayCars(list = cars) {
                 <p class="car-year">${car.year}</p>
                 <h3>${car.make} ${car.model}</h3>
                 <div class="car-specs"><span>${car.mileage.toLocaleString()} mi</span><span>${car.transmission}</span><span>${car.fuel}</span></div>
-                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${formatUSD(car.planPrice)}</div>` : ""}
+                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan � ${formatUSD(car.planPrice)}</div>` : ""}
                 <div class="car-bottom">
                     <strong>${formatVehiclePrice(car.price, car.currency)}</strong>
                     <span>${car.city}, ${car.location}</span>
                 </div>
                 <div class="car-actions">
-                    <button type="button" class="view-details-btn" data-car-id="${car.id}">View vehicle <span aria-hidden="true">→</span></button>
-                    <button type="button" class="save-car-btn" data-car-id="${car.id}" aria-label="Save car" aria-pressed="${JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]").includes(Number(car.id))}">${JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]").includes(Number(car.id)) ? "♥" : "♡"}</button>
+                    <button type="button" class="view-details-btn" data-car-id="${car.id}">View vehicle <span aria-hidden="true">?</span></button>
+                    <button type="button" class="save-car-btn" data-car-id="${car.id}" aria-label="Save car" aria-pressed="${JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]").includes(Number(car.id))}">${JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]").includes(Number(car.id)) ? "?" : "?"}</button>
                 </div>
             </div>
         </article>
@@ -259,7 +259,7 @@ function openCarDetails(id) {
 
     overlay.innerHTML = `
         <div class="vehicle-details-modal">
-            <button type="button" id="closeVehicleDetails" class="vehicle-details-close">×</button>
+            <button type="button" id="closeVehicleDetails" class="vehicle-details-close">�</button>
 
             <img src="${car.image}" alt="${car.make} ${car.model}" class="vehicle-details-image">
 
@@ -322,10 +322,11 @@ document.addEventListener("click", event => {
 document.addEventListener("DOMContentLoaded", () => {
     loadUserListings();
     displayCars();
+    loadPublicListings();
     const saved = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]");
     document.querySelectorAll(".save-car-btn").forEach(button => {
         if (saved.includes(Number(button.dataset.carId))) {
-            button.textContent = "♥";
+            button.textContent = "?";
             button.style.color = "#e63946";
         }
     });
@@ -342,7 +343,7 @@ function showSavedCars() {
     modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;";
     modal.innerHTML = `
         <div style="background:#fff;color:#111827;width:100%;max-width:1050px;max-height:92vh;overflow:auto;border-radius:20px;padding:32px;position:relative;">
-            <button type="button" id="closeSavedCars" style="position:absolute;right:18px;top:18px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
+            <button type="button" id="closeSavedCars" style="position:absolute;right:18px;top:18px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">�</button>
 
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin:0 0 6px;">YOUR GARAGE</p>
             <h2 style="font-size:32px;margin:0 0 8px;">My Garage</h2>
@@ -370,7 +371,7 @@ function showSavedCars() {
     <button type="button" class="saved-view-btn" data-car-id="${car.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
     <button type="button" class="saved-remove-btn" data-car-id="${car.id}" style="padding:8px 11px;border:1px solid #e5e7eb;border-radius:8px;background:white;color:#e63946;cursor:pointer;">Remove</button>
 </div>
-                        </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">♡</div><strong>No saved cars yet</strong><p style="margin:6px 0 0;font-size:13px;">Save a car from the marketplace to find it here.</p></div>`}
+                        </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">?</div><strong>No saved cars yet</strong><p style="margin:6px 0 0;font-size:13px;">Save a car from the marketplace to find it here.</p></div>`}
                 </section>
 
                 <section style="border:1px solid #e5e7eb;border-radius:16px;padding:22px;">
@@ -387,10 +388,10 @@ function showSavedCars() {
                             <div style="flex:1;min-width:0;">
                                 <strong style="display:block;">${listing.year} ${listing.make} ${listing.model}</strong>
                                 <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatVehiclePrice(listing.price, listing.currency)}</span>
-                                <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${listing.plan} • ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</span>
+                                <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${listing.plan} � ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</span>
                             </div>
                             <button type="button" class="my-listing-view-btn" data-car-id="${listing.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
-                        </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">🚗</div><strong>No listings yet</strong><p style="margin:6px 0 0;font-size:13px;">Choose a seller plan to publish your vehicle.</p></div>`}
+                        </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">??</div><strong>No listings yet</strong><p style="margin:6px 0 0;font-size:13px;">Choose a seller plan to publish your vehicle.</p></div>`}
                 </section>
             </div>
         </div>`;
@@ -417,6 +418,49 @@ function loadUserListings() {
     });
 }
 
+async function loadPublicListings() {
+    try {
+        const data = await apiRequest("/listings");
+        const listings = Array.isArray(data.listings) ? data.listings : [];
+
+        listings.forEach(listing => {
+            const databaseId = Number(listing.id);
+
+            if (!databaseId || cars.some(car => Number(car.apiListingId) === databaseId)) {
+                return;
+            }
+
+            cars.push({
+                id: 1000000000 + databaseId,
+                apiListingId: databaseId,
+                make: listing.make || "",
+                model: listing.model || "",
+                year: Number(listing.year) || 0,
+                price: Number(listing.price) || 0,
+                currency: listing.currency || "USD",
+                mileage: Number(listing.mileage) || 0,
+                transmission: listing.transmission || "Not specified",
+                fuel: listing.fuel || "Not specified",
+                location: normalizeLocation(listing.location),
+                city: listing.city || "",
+                image: listing.image || "",
+                color: listing.color || "Not specified",
+                drivetrain: listing.drivetrain || "Not specified",
+                description: listing.description || "",
+                plan: listing.plan || "",
+                planPrice: Number(listing.plan_price) || 0,
+                seller_name: listing.seller_name || "",
+                seller_phone: listing.seller_phone || ""
+            });
+        });
+
+        displayCars();
+        updateMarketplaceResultsCount(cars.length);
+        console.log("AutoNorth: live database listings loaded:", listings.length);
+    } catch (error) {
+        console.error("Could not load live database listings:", error);
+    }
+}
 function showPricing() {
     closeAutoNorthModal();
 
@@ -426,7 +470,7 @@ function showPricing() {
 
     modal.innerHTML = `
         <div class="pricing-modal">
-            <button type="button" id="closePricingModal" class="pricing-close" aria-label="Close">×</button>
+            <button type="button" id="closePricingModal" class="pricing-close" aria-label="Close">�</button>
 
             <div class="pricing-header">
                 <p class="pricing-eyebrow">SELL WITH AUTONORTH</p>
@@ -443,11 +487,11 @@ function showPricing() {
                         <p class="pricing-description">A simple, affordable way to put your vehicle in front of AutoNorth buyers.</p>
                     </div>
                     <ul class="pricing-features">
-                        <li>✓ 1 vehicle listing</li>
-                        <li>✓ Standard search visibility</li>
-                        <li>✓ Vehicle photos & full details</li>
-                        <li>✓ Buyer inquiries</li>
-                        <li>✓ 30-day listing period</li>
+                        <li>? 1 vehicle listing</li>
+                        <li>? Standard search visibility</li>
+                        <li>? Vehicle photos & full details</li>
+                        <li>? Buyer inquiries</li>
+                        <li>? 30-day listing period</li>
                     </ul>
                     <button type="button" class="choose-plan pricing-button pricing-button-dark" data-plan="Basic" data-price="9.99">Choose Basic</button>
                 </div>
@@ -461,11 +505,11 @@ function showPricing() {
                         <p class="pricing-description">Give your vehicle extra visibility and make it easier for buyers to notice.</p>
                     </div>
                     <ul class="pricing-features">
-                        <li>✓ Everything in Basic</li>
-                        <li>✓ Featured badge on your listing</li>
-                        <li>✓ Priority placement in listings</li>
-                        <li>✓ Extra visibility for your vehicle</li>
-                        <li>✓ 30-day listing period</li>
+                        <li>? Everything in Basic</li>
+                        <li>? Featured badge on your listing</li>
+                        <li>? Priority placement in listings</li>
+                        <li>? Extra visibility for your vehicle</li>
+                        <li>? 30-day listing period</li>
                     </ul>
                     <button type="button" class="choose-plan pricing-button pricing-button-red" data-plan="Featured" data-price="19.99">Choose Featured</button>
                 </div>
@@ -478,11 +522,11 @@ function showPricing() {
                         <p class="pricing-description">For sellers who want their vehicle to stand out with the highest available placement.</p>
                     </div>
                     <ul class="pricing-features">
-                        <li>✓ Everything in Featured</li>
-                        <li>✓ Premium badge & highlighted listing</li>
-                        <li>✓ Top placement for stronger visibility</li>
-                        <li>✓ Maximum marketplace exposure</li>
-                        <li>✓ 60-day listing period</li>
+                        <li>? Everything in Featured</li>
+                        <li>? Premium badge & highlighted listing</li>
+                        <li>? Top placement for stronger visibility</li>
+                        <li>? Maximum marketplace exposure</li>
+                        <li>? 60-day listing period</li>
                     </ul>
                     <button type="button" class="choose-plan pricing-button pricing-button-dark" data-plan="Premium" data-price="29.99">Choose Premium</button>
                 </div>
@@ -515,7 +559,7 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
 
     modal.innerHTML = `
         <div style="background:#fff;color:#111827;width:100%;max-width:760px;max-height:92vh;overflow:auto;border-radius:18px;padding:30px;position:relative;">
-            <button type="button" id="closeListingModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">×</button>
+            <button type="button" id="closeListingModal" aria-label="Close" style="position:absolute;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:50%;background:#f3f4f6;font-size:26px;cursor:pointer;">�</button>
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CREATE YOUR LISTING</p>
             <h2 style="font-size:32px;margin-bottom:5px;">List your car</h2>
             <div class="selected-plan-summary"><div><span>SELECTED PLAN</span><strong>${plan}</strong></div><strong class="selected-plan-price">${Number(planPrice).toFixed(2)}</strong></div>
@@ -535,7 +579,7 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
                     <label style="grid-column:1/-1;">Photo URL<input name="image" placeholder="https://..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;"></label>
                     <label style="grid-column:1/-1;">Description<textarea name="description" rows="4" placeholder="Tell buyers about the vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea></label>
                 </div>
-                <button type="submit" id="saveListingButton" style="width:100%;margin-top:20px;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;font-size:16px;cursor:pointer;">Save Listing — ${plan}</button>
+                <button type="submit" id="saveListingButton" style="width:100%;margin-top:20px;padding:15px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;font-size:16px;cursor:pointer;">Save Listing � ${plan}</button>
                 <p style="font-size:12px;color:#6b7280;margin-top:10px;text-align:center;">Payment is still demo-only. Your listing will be stored in the database as pending.</p>
             </form>
         </div>
@@ -579,12 +623,12 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
             liveModal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;";
             liveModal.innerHTML = `
                 <div style="background:white;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;text-align:center;">
-                    <div style="width:70px;height:70px;border-radius:50%;background:#fff7ed;color:#ea580c;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;margin:0 auto 14px;">✓</div>
+                    <div style="width:70px;height:70px;border-radius:50%;background:#fff7ed;color:#ea580c;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;margin:0 auto 14px;">?</div>
                     <p style="color:#ea580c;font-size:12px;font-weight:800;letter-spacing:2px;">LISTING SUBMITTED</p>
                     <h2 style="font-size:30px;margin:6px 0 10px;">Your listing is saved</h2>
                     <p style="color:#6b7280;line-height:1.6;">${listing.year} ${listing.make} ${listing.model} has been saved to your seller account.</p>
                     <div class="checkout-process-steps" style="margin:20px 0;">
-                        <span class="done">✓ Vehicle details</span>
+                        <span class="done">? Vehicle details</span>
                         <span class="active">2. Payment</span>
                         <span>3. Listing live</span>
                     </div>
@@ -604,7 +648,7 @@ function showListingForm(plan = "Basic", planPrice = "9.99") {
             };
         } catch (err) {
             submit.disabled = false;
-            submit.textContent = `Save Listing — ${plan}`;
+            submit.textContent = `Save Listing � ${plan}`;
             const error = document.createElement("div");
             error.style.cssText = "margin-top:12px;padding:12px;border-radius:8px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-size:13px;";
             error.textContent = err.message || "Could not save listing.";
@@ -617,17 +661,34 @@ function showContactSellerForm(car) {
     const existing = document.getElementById("seller-contact-overlay");
     if (existing) existing.remove();
 
+    const phone = String(car.seller_phone || "").trim();
+    const phoneLink = phone.replace(/[^\d+]/g, "");
+    const internationalPhone = /^\+/.test(phone) || /^00/.test(phone);
+    const whatsappNumber = internationalPhone
+        ? phone.replace(/\D/g, "").replace(/^00/, "")
+        : "";
+
     const overlay = document.createElement("div");
     overlay.id = "seller-contact-overlay";
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000000;display:flex;align-items:center;justify-content:center;padding:20px;";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;";
 
     overlay.innerHTML = `
-        <div style="background:#fff;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;position:relative;">
-            <button type="button" id="closeSellerContact" aria-label="Close" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;font-size:24px;cursor:pointer;">×</button>
+        <div style="background:#fff;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;position:relative;max-height:90vh;overflow-y:auto;">
+            <button type="button" id="closeSellerContact" aria-label="Close" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;font-size:24px;cursor:pointer;">&times;</button>
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CONTACT SELLER</p>
             <h2 style="margin-bottom:6px;">Ask about the ${car.year} ${car.make} ${car.model}</h2>
-            <p style="color:#6b7280;margin-bottom:20px;">Send an inquiry about this vehicle.</p>
+            <p style="color:#6b7280;margin-bottom:20px;">Choose how you would like to contact the seller.</p>
+
+            ${phoneLink ? `
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;">
+                    <a href="tel:${phoneLink}" style="flex:1;text-align:center;text-decoration:none;padding:13px 16px;border-radius:9px;background:#111827;color:white;font-weight:800;">?? Call Seller</a>
+                    ${whatsappNumber ? `<a href="https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hello, I am interested in your " + car.year + " " + car.make + " " + car.model + " listed on AutoNorth.")}" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;text-decoration:none;padding:13px 16px;border-radius:9px;background:#16a34a;color:white;font-weight:800;">WhatsApp Seller</a>` : ""}
+                </div>
+                ${!whatsappNumber ? `<p style="font-size:12px;color:#6b7280;margin-bottom:16px;">WhatsApp link unavailable because the seller's phone number is not in international format. You can still call them.</p>` : ""}
+            ` : `<p style="padding:13px;background:#f3f4f6;border-radius:8px;color:#6b7280;margin-bottom:18px;">The seller has not provided a contact phone number.</p>`}
+
             <form id="sellerContactForm">
+                <h3 style="margin-bottom:14px;">Send an inquiry</h3>
                 <label style="display:block;margin-bottom:14px;">Your Name
                     <input required name="name" placeholder="Your name" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;">
                 </label>
@@ -637,7 +698,8 @@ function showContactSellerForm(car) {
                 <label style="display:block;margin-bottom:14px;">Message
                     <textarea required name="message" rows="4" placeholder="I'm interested in this vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea>
                 </label>
-                <button type="submit" style="width:100%;padding:14px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Send Inquiry</button>
+                <button id="sendSellerInquiry" type="submit" style="width:100%;padding:14px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Send Inquiry</button>
+                <p id="sellerInquiryStatus" role="status" style="margin-top:12px;font-size:13px;"></p>
             </form>
         </div>
     `;
@@ -649,26 +711,52 @@ function showContactSellerForm(car) {
         if (event.target === overlay) overlay.remove();
     };
 
-    document.getElementById("sellerContactForm").onsubmit = event => {
+    document.getElementById("sellerContactForm").onsubmit = async event => {
         event.preventDefault();
-        const form = new FormData(event.currentTarget);
-        const name = form.get("name");
-        const inquiries = JSON.parse(localStorage.getItem("autonorth_inquiries") || "[]");
-        inquiries.push({id:Date.now(),carId:car.id,vehicle:car.year+" "+car.make+" "+car.model,name:String(name),email:String(form.get("email")),message:String(form.get("message")),createdAt:new Date().toISOString(),status:"New"});
-        localStorage.setItem("autonorth_inquiries", JSON.stringify(inquiries));
-        overlay.querySelector("div").innerHTML = `
-            <div style="text-align:center;padding:15px;">
-                <div style="font-size:48px;margin-bottom:10px;">✓</div>
-                <h2>Inquiry sent</h2>
-                <p style="color:#6b7280;line-height:1.6;">Thanks, ${name}. Your inquiry for the ${car.year} ${car.make} ${car.model} has been prepared. Seller messaging can be connected to the backend next.</p>
-                <button type="button" id="finishSellerContact" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
-            </div>
-        `;
-        document.getElementById("finishSellerContact").onclick = () => overlay.remove();
+
+        const formElement = event.currentTarget;
+        const form = new FormData(formElement);
+        const submitButton = document.getElementById("sendSellerInquiry");
+        const status = document.getElementById("sellerInquiryStatus");
+
+        if (!car.apiListingId) {
+            status.style.color = "#b45309";
+            status.textContent = "This sample or locally saved vehicle cannot receive database inquiries. Please contact the seller directly if contact details are available.";
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending...";
+        status.textContent = "";
+
+        try {
+            await apiRequest("/inquiries", {
+                method: "POST",
+                body: JSON.stringify({
+                    listingId: car.apiListingId,
+                    name: String(form.get("name")).trim(),
+                    email: String(form.get("email")).trim(),
+                    message: String(form.get("message")).trim()
+                })
+            });
+
+            formElement.innerHTML = `
+                <div style="text-align:center;padding:15px;">
+                    <div style="font-size:42px;margin-bottom:10px;">?</div>
+                    <h2>Inquiry sent!</h2>
+                    <p style="color:#6b7280;line-height:1.6;">Your inquiry has been saved and is now available to the seller in their AutoNorth dashboard.</p>
+                    <button type="button" id="finishSellerContact" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
+                </div>
+            `;
+            document.getElementById("finishSellerContact").onclick = () => overlay.remove();
+        } catch (error) {
+            submitButton.disabled = false;
+            submitButton.textContent = "Send Inquiry";
+            status.style.color = "#dc2626";
+            status.textContent = error.message || "Could not send your inquiry. Please try again.";
+        }
     };
 }
-
-
 document.addEventListener("click", event => {
     const removeSavedButton = event.target.closest(".saved-remove-btn");
 
@@ -698,12 +786,12 @@ document.addEventListener("click", event => {
         const index = saved.indexOf(carId);
         if (index === -1) {
             saved.push(carId);
-            saveButton.textContent = "♥";
+            saveButton.textContent = "?";
             saveButton.setAttribute("aria-pressed", "true");
             saveButton.style.color = "#e63946";
         } else {
             saved.splice(index, 1);
-            saveButton.textContent = "♡";
+            saveButton.textContent = "?";
             saveButton.setAttribute("aria-pressed", "false");
             saveButton.style.color = "";
         }
@@ -792,7 +880,7 @@ function showAccount() {
 
     if (hasSession) {
         m.innerHTML = `<div class="account-modal">
-            <button id="closeAccount" class="pricing-close">×</button>
+            <button id="closeAccount" class="pricing-close">�</button>
             <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
             <h2>Welcome, ${a.name || "AutoNorth member"}</h2>
             <p class="account-intro">Your account is connected to the AutoNorth server.</p>
@@ -804,7 +892,7 @@ function showAccount() {
             <div class="account-actions">
                 <button id="sellerDashboard" class="account-secondary">Seller Dashboard</button>
                 <button id="savedFromAccount" class="account-secondary">Saved Cars</button>
-                <button id="phoneVerifyAccount" class="account-secondary">📱 Verify Phone</button>
+                <button id="phoneVerifyAccount" class="account-secondary">?? Verify Phone</button>
                 <button id="logoutAccount" class="account-danger">Sign Out</button>
             </div>
             <div id="accountSecurityStatus" style="margin-top:16px;padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;font-size:13px;">Checking security status...</div>
@@ -828,7 +916,7 @@ function showAccount() {
     }
 
     m.innerHTML = `<div class="account-modal">
-        <button id="closeAccount" class="pricing-close">×</button>
+        <button id="closeAccount" class="pricing-close">�</button>
         <p class="pricing-eyebrow">AUTONORTH ACCOUNT</p>
         <h2 id="accountTitle">Sign in to AutoNorth</h2>
         <p class="account-intro" id="accountIntro">Access your saved cars, listings and buyer inquiries.</p>
@@ -920,8 +1008,8 @@ async function refreshSecurityStatus(){
         const data = await apiRequest("/me/security");
         const verified = Boolean(data.phoneVerified);
         box.innerHTML = verified
-            ? "📱 <strong>Phone verified</strong> — your account has completed phone verification."
-            : "📱 <strong>Phone not verified</strong> — verify your number to strengthen seller security.";
+            ? "?? <strong>Phone verified</strong> � your account has completed phone verification."
+            : "?? <strong>Phone not verified</strong> � verify your number to strengthen seller security.";
     } catch (err) {
         box.textContent = "Security status could not be loaded.";
     }
@@ -936,7 +1024,7 @@ async function showPhoneVerification(){
     m.id = "autonorth-modal";
     m.className = "site-modal";
     m.innerHTML = `<div class="account-modal">
-        <button id="closePhoneVerify" class="pricing-close">×</button>
+        <button id="closePhoneVerify" class="pricing-close">�</button>
         <p class="pricing-eyebrow">ACCOUNT SECURITY</p>
         <h2>Verify your phone</h2>
         <p class="account-intro">We'll send a one-time verification code to your phone number.</p>
@@ -1034,7 +1122,7 @@ async function showSellerDashboard(){
  m.id="autonorth-modal";
  m.className="site-modal";
  m.innerHTML=`<div class="dashboard-modal">
-   <button id="closeDashboard" class="pricing-close">×</button>
+   <button id="closeDashboard" class="pricing-close">�</button>
    <p class="pricing-eyebrow">SELLER CENTER</p><h2>Seller Dashboard</h2>
    <p class="account-intro">Loading your listings and buyer inquiries...</p>
  </div>`;
@@ -1052,14 +1140,14 @@ async function showSellerDashboard(){
 
    const listings=ls.length?ls.map(x=>`<div class="dashboard-listing">
      <img src="${x.image||"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80"}" alt="${x.make} ${x.model}">
-     <div class="dashboard-listing-info"><strong>${x.year} ${x.make} ${x.model}</strong><span>${formatVehiclePrice(x.price, x.currency)} • ${x.plan||"Basic"}</span><small>● ${x.status||"pending"}</small></div>
+     <div class="dashboard-listing-info"><strong>${x.year} ${x.make} ${x.model}</strong><span>${formatVehiclePrice(x.price, x.currency)} � ${x.plan||"Basic"}</span><small>? ${x.status||"pending"}</small></div>
      <button class="dashboard-edit" data-id="${x.id}">Edit</button>
      <button class="dashboard-delete" data-id="${x.id}">Delete</button>
    </div>`).join(""):"<p class=\"empty-dashboard\">No listings yet. Start by selling your car.</p>";
 
-   const inquiries=iq.length?iq.slice().reverse().map(x=>`<div class="inquiry-card"><strong>${x.make||""} ${x.model||""}</strong><span>${x.buyer_name||""} • ${x.buyer_email||""}</span><p>${x.message||""}</p><small>${x.created_at?new Date(x.created_at).toLocaleString():""}</small></div>`).join(""):"<p class=\"empty-dashboard\">No buyer inquiries yet.</p>";
+   const inquiries=iq.length?iq.slice().reverse().map(x=>`<div class="inquiry-card"><strong>${x.make||""} ${x.model||""}</strong><span>${x.buyer_name||""} � ${x.buyer_email||""}</span><p>${x.message||""}</p><small>${x.created_at?new Date(x.created_at).toLocaleString():""}</small></div>`).join(""):"<p class=\"empty-dashboard\">No buyer inquiries yet.</p>";
 
-   m.querySelector(".dashboard-modal").innerHTML=`<button id="closeDashboard" class="pricing-close">×</button>
+   m.querySelector(".dashboard-modal").innerHTML=`<button id="closeDashboard" class="pricing-close">�</button>
      <p class="pricing-eyebrow">SELLER CENTER</p><h2>Seller Dashboard</h2>
      <p class="account-intro">Manage your listings and review messages from interested buyers.</p>
      <div class="dashboard-stats"><div><strong>${ls.length}</strong><span>Listings</span></div><div><strong>${liveCount}</strong><span>Live</span></div><div><strong>${iq.length}</strong><span>Inquiries</span></div></div>
@@ -1073,7 +1161,7 @@ async function showSellerDashboard(){
       if(x){closeAutoNorthModal();showEditListingForm(x);}
    });
  }catch(err){
-   m.querySelector(".dashboard-modal").innerHTML=`<button id="closeDashboard" class="pricing-close">×</button>
+   m.querySelector(".dashboard-modal").innerHTML=`<button id="closeDashboard" class="pricing-close">�</button>
      <p class="pricing-eyebrow">SELLER CENTER</p><h2>Seller Dashboard</h2>
      <p class="account-intro" style="color:#b91c1c;">${err.message||"Could not load your seller data."}</p>
      <button id="retryDashboard" class="pricing-button pricing-button-red">Try Again</button>`;
@@ -1102,22 +1190,22 @@ function adminRemoveListing(id){const ls=JSON.parse(localStorage.getItem("autono
 
 function showEditListingForm(x){
  closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
- m.innerHTML="<div class=\"edit-listing-modal\"><button id=\"closeEdit\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">EDIT LISTING</p><h2>Update your vehicle</h2><form id=\"editForm\" class=\"edit-listing-form\"><label>Make<input required name=\"make\" value=\""+x.make+"\"></label><label>Model<input required name=\"model\" value=\""+x.model+"\"></label><label>Year<input required type=\"number\" name=\"year\" value=\""+x.year+"\"></label><label>Price<input required type=\"number\" name=\"price\" value=\""+x.price+"\"></label><label>Currency<select name=\"currency\">"+currencyOptions(x.currency||"USD")+"</select></label><label>Mileage<input required type=\"number\" name=\"mileage\" value=\""+x.mileage+"\"></label><label>Country<input required name=\"location\" value=\""+String(x.location||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;")+"\" placeholder=\"Enter country\"></label><label>City / State / Province<input required name=\"city\" value=\""+x.city+"\"></label><label>Fuel<select name=\"fuel\"><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label><label>Transmission<select name=\"transmission\"><option>Automatic</option><option>Manual</option></select></label><label class=\"full-field\">Photo URL<input name=\"image\" value=\""+x.image+"\"></label><label class=\"full-field\">Description<textarea name=\"description\">"+(x.description||"")+"</textarea></label><button class=\"pricing-button pricing-button-red full-field\">Save Changes</button></form></div>";
+ m.innerHTML="<div class=\"edit-listing-modal\"><button id=\"closeEdit\" class=\"pricing-close\">�</button><p class=\"pricing-eyebrow\">EDIT LISTING</p><h2>Update your vehicle</h2><form id=\"editForm\" class=\"edit-listing-form\"><label>Make<input required name=\"make\" value=\""+x.make+"\"></label><label>Model<input required name=\"model\" value=\""+x.model+"\"></label><label>Year<input required type=\"number\" name=\"year\" value=\""+x.year+"\"></label><label>Price<input required type=\"number\" name=\"price\" value=\""+x.price+"\"></label><label>Currency<select name=\"currency\">"+currencyOptions(x.currency||"USD")+"</select></label><label>Mileage<input required type=\"number\" name=\"mileage\" value=\""+x.mileage+"\"></label><label>Country<input required name=\"location\" value=\""+String(x.location||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;")+"\" placeholder=\"Enter country\"></label><label>City / State / Province<input required name=\"city\" value=\""+x.city+"\"></label><label>Fuel<select name=\"fuel\"><option>Gasoline</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></label><label>Transmission<select name=\"transmission\"><option>Automatic</option><option>Manual</option></select></label><label class=\"full-field\">Photo URL<input name=\"image\" value=\""+x.image+"\"></label><label class=\"full-field\">Description<textarea name=\"description\">"+(x.description||"")+"</textarea></label><button class=\"pricing-button pricing-button-red full-field\">Save Changes</button></form></div>";
  document.body.appendChild(m);document.getElementById("closeEdit").onclick=closeAutoNorthModal;
  document.getElementById("editForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const u={...x,make:d.make,model:d.model,year:Number(d.year),price:Number(d.price),currency:d.currency||x.currency||"USD",mileage:Number(d.mileage),location:normalizeLocation(d.location),city:d.city,fuel:d.fuel,transmission:d.transmission,image:d.image||x.image,description:d.description||x.description};const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]").map(v=>v.id===x.id?u:v);localStorage.setItem("autonorth_user_listings",JSON.stringify(ls));const i=cars.findIndex(v=>v.id===x.id);if(i>=0)cars[i]=u;displayCars();closeAutoNorthModal();showSellerDashboard();};
 }
 
 function showContactUs(){
- closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";m.innerHTML="<div class=\"contact-modal\"><button id=\"closeContact\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">CONTACT AUTONORTH</p><h2>How can we help?</h2><p class=\"account-intro\">Send the AutoNorth team a message. This demo saves it locally.</p><form id=\"contactForm\" class=\"account-form\"><label>Name<input required name=\"name\"></label><label>Email<input required type=\"email\" name=\"email\"></label><label>Message<textarea required name=\"message\" rows=\"5\"></textarea></label><button class=\"pricing-button pricing-button-red\">Send Message</button></form></div>";document.body.appendChild(m);document.getElementById("closeContact").onclick=closeAutoNorthModal;
- document.getElementById("contactForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const a=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");a.push({id:Date.now(),...d,createdAt:new Date().toISOString()});localStorage.setItem("autonorth_contact_messages",JSON.stringify(a));m.querySelector(".contact-modal").innerHTML="<div class=\"contact-success\"><div>✓</div><h2>Message received</h2><p>Thanks, "+d.name+". Your message has been saved in this demo.</p><button id=\"contactDone\" class=\"pricing-button pricing-button-dark\">Done</button></div>";document.getElementById("contactDone").onclick=closeAutoNorthModal;};
+ closeAutoNorthModal();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";m.innerHTML="<div class=\"contact-modal\"><button id=\"closeContact\" class=\"pricing-close\">�</button><p class=\"pricing-eyebrow\">CONTACT AUTONORTH</p><h2>How can we help?</h2><p class=\"account-intro\">Send the AutoNorth team a message. This demo saves it locally.</p><form id=\"contactForm\" class=\"account-form\"><label>Name<input required name=\"name\"></label><label>Email<input required type=\"email\" name=\"email\"></label><label>Message<textarea required name=\"message\" rows=\"5\"></textarea></label><button class=\"pricing-button pricing-button-red\">Send Message</button></form></div>";document.body.appendChild(m);document.getElementById("closeContact").onclick=closeAutoNorthModal;
+ document.getElementById("contactForm").onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const a=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");a.push({id:Date.now(),...d,createdAt:new Date().toISOString()});localStorage.setItem("autonorth_contact_messages",JSON.stringify(a));m.querySelector(".contact-modal").innerHTML="<div class=\"contact-success\"><div>?</div><h2>Message received</h2><p>Thanks, "+d.name+". Your message has been saved in this demo.</p><button id=\"contactDone\" class=\"pricing-button pricing-button-dark\">Done</button></div>";document.getElementById("contactDone").onclick=closeAutoNorthModal;};
 }
 
 function showAdminDashboard(){
  if (localStorage.getItem("autonorth_admin_demo_enabled") !== "true") { console.warn("Admin dashboard is disabled in the public build."); return; }
  closeAutoNorthModal();const ls=JSON.parse(localStorage.getItem("autonorth_user_listings")||"[]");const iq=JSON.parse(localStorage.getItem("autonorth_inquiries")||"[]");const cm=JSON.parse(localStorage.getItem("autonorth_contact_messages")||"[]");const a=getAccount();const m=document.createElement("div");m.id="autonorth-modal";m.className="site-modal";
- let rows=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatVehiclePrice(x.price, x.currency)+" • "+x.plan+" • Live</span></div><button class=\"dashboard-delete admin-remove\" data-id=\""+x.id+"\">Remove</button></div>").join(""):"<p class=\"empty-dashboard\">No seller listings.</p>";
- let inqs=iq.length?iq.map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" • "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries.</p>";
+ let rows=ls.length?ls.map(x=>"<div class=\"dashboard-listing\"><img src=\""+x.image+"\"><div class=\"dashboard-listing-info\"><strong>"+x.year+" "+x.make+" "+x.model+"</strong><span>"+formatVehiclePrice(x.price, x.currency)+" � "+x.plan+" � Live</span></div><button class=\"dashboard-delete admin-remove\" data-id=\""+x.id+"\">Remove</button></div>").join(""):"<p class=\"empty-dashboard\">No seller listings.</p>";
+ let inqs=iq.length?iq.map(x=>"<div class=\"inquiry-card\"><strong>"+x.vehicle+"</strong><span>"+x.name+" � "+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No buyer inquiries.</p>";
  let msgs=cm.length?cm.map(x=>"<div class=\"inquiry-card\"><strong>"+x.name+"</strong><span>"+x.email+"</span><p>"+x.message+"</p></div>").join(""):"<p class=\"empty-dashboard\">No contact messages.</p>";
- m.innerHTML="<div class=\"dashboard-modal admin-dashboard\"><button id=\"closeAdmin\" class=\"pricing-close\">×</button><p class=\"pricing-eyebrow\">ADMIN DEMO</p><h2>AutoNorth Admin Dashboard</h2><p class=\"account-intro\">Demo management tools. Real server-side admin security is required before launch.</p><div class=\"dashboard-stats\"><div><strong>"+cars.length+"</strong><span>Cars</span></div><div><strong>"+ls.length+"</strong><span>Seller Listings</span></div><div><strong>"+(a?1:0)+"</strong><span>Demo Users</span></div><div><strong>"+(iq.length+cm.length)+"</strong><span>Messages</span></div></div><div class=\"dashboard-section\"><h3>Seller Listings</h3>"+rows+"</div><div class=\"dashboard-section\"><h3>Buyer Inquiries</h3>"+inqs+"</div><div class=\"dashboard-section\"><h3>Contact Messages</h3>"+msgs+"</div></div>";
+ m.innerHTML="<div class=\"dashboard-modal admin-dashboard\"><button id=\"closeAdmin\" class=\"pricing-close\">�</button><p class=\"pricing-eyebrow\">ADMIN DEMO</p><h2>AutoNorth Admin Dashboard</h2><p class=\"account-intro\">Demo management tools. Real server-side admin security is required before launch.</p><div class=\"dashboard-stats\"><div><strong>"+cars.length+"</strong><span>Cars</span></div><div><strong>"+ls.length+"</strong><span>Seller Listings</span></div><div><strong>"+(a?1:0)+"</strong><span>Demo Users</span></div><div><strong>"+(iq.length+cm.length)+"</strong><span>Messages</span></div></div><div class=\"dashboard-section\"><h3>Seller Listings</h3>"+rows+"</div><div class=\"dashboard-section\"><h3>Buyer Inquiries</h3>"+inqs+"</div><div class=\"dashboard-section\"><h3>Contact Messages</h3>"+msgs+"</div></div>";
  document.body.appendChild(m);document.getElementById("closeAdmin").onclick=closeAutoNorthModal;m.querySelectorAll(".admin-remove").forEach(b=>b.onclick=()=>deleteUserListing(Number(b.dataset.id)));
 }

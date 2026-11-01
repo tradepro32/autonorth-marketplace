@@ -433,7 +433,7 @@ app.get("/api/me", auth, async (req, res) => {
 
 app.get("/api/listings", async (req, res) => {
   const listings = await db.prepare(
-    "SELECT l.*, u.name AS seller_name FROM listings l JOIN users u ON u.id=l.seller_id WHERE l.status='live' ORDER BY l.created_at DESC"
+    "SELECT l.*, u.name AS seller_name, u.phone AS seller_phone FROM listings l JOIN users u ON u.id=l.seller_id WHERE l.status='live' ORDER BY l.created_at DESC"
   ).all();
   res.json({ listings });
 });
