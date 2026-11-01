@@ -131,7 +131,7 @@ function displayCars(list = cars) {
                 <p class="car-year">${car.year}</p>
                 <h3>${car.make} ${car.model}</h3>
                 <div class="car-specs"><span>${car.mileage.toLocaleString()} mi</span><span>${car.transmission}</span><span>${car.fuel}</span></div>
-                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan • ${formatUSD(car.planPrice)}</div>` : ""}
+                ${car.plan ? `<div class="car-plan-label">${car.plan} seller plan — ${formatUSD(car.planPrice)}</div>` : ""}
                 <div class="car-bottom">
                     <strong>${formatVehiclePrice(car.price, car.currency)}</strong>
                     <span>${car.city}, ${car.location}</span>
@@ -322,6 +322,7 @@ document.addEventListener("click", event => {
 document.addEventListener("DOMContentLoaded", () => {
     loadUserListings();
     displayCars();
+    loadPublicListings();
     const saved = JSON.parse(localStorage.getItem("autonorth_saved_cars") || "[]");
     document.querySelectorAll(".save-car-btn").forEach(button => {
         if (saved.includes(Number(button.dataset.carId))) {
@@ -387,7 +388,7 @@ function showSavedCars() {
                             <div style="flex:1;min-width:0;">
                                 <strong style="display:block;">${listing.year} ${listing.make} ${listing.model}</strong>
                                 <span style="display:block;color:#e63946;font-weight:800;margin-top:4px;">${formatVehiclePrice(listing.price, listing.currency)}</span>
-                                <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${listing.plan} • ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</span>
+                                <span style="display:block;color:#6b7280;font-size:12px;margin-top:2px;">${listing.plan} — ${listing.paymentStatus === "demo-completed" ? "Live" : "Pending"}</span>
                             </div>
                             <button type="button" class="my-listing-view-btn" data-car-id="${listing.id}" style="padding:8px 11px;border:0;border-radius:8px;background:#111827;color:white;cursor:pointer;">View</button>
                         </div>`).join("")}</div>` : `<div style="text-align:center;padding:35px 10px;color:#6b7280;background:#f9fafb;border-radius:12px;"><div style="font-size:40px;">🚗</div><strong>No listings yet</strong><p style="margin:6px 0 0;font-size:13px;">Choose a seller plan to publish your vehicle.</p></div>`}
@@ -417,6 +418,49 @@ function loadUserListings() {
     });
 }
 
+async function loadPublicListings() {
+    try {
+        const data = await apiRequest("/listings");
+        const listings = Array.isArray(data.listings) ? data.listings : [];
+
+        listings.forEach(listing => {
+            const databaseId = Number(listing.id);
+
+            if (!databaseId || cars.some(car => Number(car.apiListingId) === databaseId)) {
+                return;
+            }
+
+            cars.push({
+                id: 1000000000 + databaseId,
+                apiListingId: databaseId,
+                make: listing.make || "",
+                model: listing.model || "",
+                year: Number(listing.year) || 0,
+                price: Number(listing.price) || 0,
+                currency: listing.currency || "USD",
+                mileage: Number(listing.mileage) || 0,
+                transmission: listing.transmission || "Not specified",
+                fuel: listing.fuel || "Not specified",
+                location: normalizeLocation(listing.location),
+                city: listing.city || "",
+                image: listing.image || "",
+                color: listing.color || "Not specified",
+                drivetrain: listing.drivetrain || "Not specified",
+                description: listing.description || "",
+                plan: listing.plan || "",
+                planPrice: Number(listing.plan_price) || 0,
+                seller_name: listing.seller_name || "",
+                seller_phone: listing.seller_phone || ""
+            });
+        });
+
+        displayCars();
+        updateMarketplaceResultsCount(cars.length);
+        console.log("AutoNorth: live database listings loaded:", listings.length);
+    } catch (error) {
+        console.error("Could not load live database listings:", error);
+    }
+}
 function showPricing() {
     closeAutoNorthModal();
 
@@ -617,17 +661,34 @@ function showContactSellerForm(car) {
     const existing = document.getElementById("seller-contact-overlay");
     if (existing) existing.remove();
 
+    const phone = String(car.seller_phone || "").trim();
+    const phoneLink = phone.replace(/[^\d+]/g, "");
+    const internationalPhone = /^\+/.test(phone) || /^00/.test(phone);
+    const whatsappNumber = internationalPhone
+        ? phone.replace(/\D/g, "").replace(/^00/, "")
+        : "";
+
     const overlay = document.createElement("div");
     overlay.id = "seller-contact-overlay";
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000000;display:flex;align-items:center;justify-content:center;padding:20px;";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;";
 
     overlay.innerHTML = `
-        <div style="background:#fff;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;position:relative;">
-            <button type="button" id="closeSellerContact" aria-label="Close" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;font-size:24px;cursor:pointer;">×</button>
+        <div style="background:#fff;color:#111827;max-width:560px;width:100%;border-radius:18px;padding:30px;position:relative;max-height:90vh;overflow-y:auto;">
+            <button type="button" id="closeSellerContact" aria-label="Close" style="position:absolute;right:15px;top:15px;width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;font-size:24px;cursor:pointer;">&times;</button>
             <p style="color:#e63946;font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">CONTACT SELLER</p>
             <h2 style="margin-bottom:6px;">Ask about the ${car.year} ${car.make} ${car.model}</h2>
-            <p style="color:#6b7280;margin-bottom:20px;">Send an inquiry about this vehicle.</p>
+            <p style="color:#6b7280;margin-bottom:20px;">Choose how you would like to contact the seller.</p>
+
+            ${phoneLink ? `
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;">
+                    <a href="tel:${phoneLink}" style="flex:1;text-align:center;text-decoration:none;padding:13px 16px;border-radius:9px;background:#111827;color:white;font-weight:800;">📞 Call Seller</a>
+                    ${whatsappNumber ? `<a href="https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hello, I am interested in your " + car.year + " " + car.make + " " + car.model + " listed on AutoNorth.")}" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;text-decoration:none;padding:13px 16px;border-radius:9px;background:#16a34a;color:white;font-weight:800;">WhatsApp Seller</a>` : ""}
+                </div>
+                ${!whatsappNumber ? `<p style="font-size:12px;color:#6b7280;margin-bottom:16px;">WhatsApp link unavailable because the seller's phone number is not in international format. You can still call them.</p>` : ""}
+            ` : `<p style="padding:13px;background:#f3f4f6;border-radius:8px;color:#6b7280;margin-bottom:18px;">The seller has not provided a contact phone number.</p>`}
+
             <form id="sellerContactForm">
+                <h3 style="margin-bottom:14px;">Send an inquiry</h3>
                 <label style="display:block;margin-bottom:14px;">Your Name
                     <input required name="name" placeholder="Your name" style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;">
                 </label>
@@ -637,7 +698,8 @@ function showContactSellerForm(car) {
                 <label style="display:block;margin-bottom:14px;">Message
                     <textarea required name="message" rows="4" placeholder="I'm interested in this vehicle..." style="width:100%;padding:12px;margin-top:6px;border:1px solid #d1d5db;border-radius:7px;resize:vertical;"></textarea>
                 </label>
-                <button type="submit" style="width:100%;padding:14px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Send Inquiry</button>
+                <button id="sendSellerInquiry" type="submit" style="width:100%;padding:14px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Send Inquiry</button>
+                <p id="sellerInquiryStatus" role="status" style="margin-top:12px;font-size:13px;"></p>
             </form>
         </div>
     `;
@@ -649,26 +711,52 @@ function showContactSellerForm(car) {
         if (event.target === overlay) overlay.remove();
     };
 
-    document.getElementById("sellerContactForm").onsubmit = event => {
+    document.getElementById("sellerContactForm").onsubmit = async event => {
         event.preventDefault();
-        const form = new FormData(event.currentTarget);
-        const name = form.get("name");
-        const inquiries = JSON.parse(localStorage.getItem("autonorth_inquiries") || "[]");
-        inquiries.push({id:Date.now(),carId:car.id,vehicle:car.year+" "+car.make+" "+car.model,name:String(name),email:String(form.get("email")),message:String(form.get("message")),createdAt:new Date().toISOString(),status:"New"});
-        localStorage.setItem("autonorth_inquiries", JSON.stringify(inquiries));
-        overlay.querySelector("div").innerHTML = `
-            <div style="text-align:center;padding:15px;">
-                <div style="font-size:48px;margin-bottom:10px;">✓</div>
-                <h2>Inquiry sent</h2>
-                <p style="color:#6b7280;line-height:1.6;">Thanks, ${name}. Your inquiry for the ${car.year} ${car.make} ${car.model} has been prepared. Seller messaging can be connected to the backend next.</p>
-                <button type="button" id="finishSellerContact" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
-            </div>
-        `;
-        document.getElementById("finishSellerContact").onclick = () => overlay.remove();
+
+        const formElement = event.currentTarget;
+        const form = new FormData(formElement);
+        const submitButton = document.getElementById("sendSellerInquiry");
+        const status = document.getElementById("sellerInquiryStatus");
+
+        if (!car.apiListingId) {
+            status.style.color = "#b45309";
+            status.textContent = "This sample or locally saved vehicle cannot receive database inquiries. Please contact the seller directly if contact details are available.";
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending...";
+        status.textContent = "";
+
+        try {
+            await apiRequest("/inquiries", {
+                method: "POST",
+                body: JSON.stringify({
+                    listingId: car.apiListingId,
+                    name: String(form.get("name")).trim(),
+                    email: String(form.get("email")).trim(),
+                    message: String(form.get("message")).trim()
+                })
+            });
+
+            formElement.innerHTML = `
+                <div style="text-align:center;padding:15px;">
+                    <div style="font-size:42px;margin-bottom:10px;">✓</div>
+                    <h2>Inquiry sent!</h2>
+                    <p style="color:#6b7280;line-height:1.6;">Your inquiry has been saved and is now available to the seller in their AutoNorth dashboard.</p>
+                    <button type="button" id="finishSellerContact" style="padding:13px 24px;border:0;border-radius:8px;background:#e63946;color:white;font-weight:800;cursor:pointer;">Done</button>
+                </div>
+            `;
+            document.getElementById("finishSellerContact").onclick = () => overlay.remove();
+        } catch (error) {
+            submitButton.disabled = false;
+            submitButton.textContent = "Send Inquiry";
+            status.style.color = "#dc2626";
+            status.textContent = error.message || "Could not send your inquiry. Please try again.";
+        }
     };
 }
-
-
 document.addEventListener("click", event => {
     const removeSavedButton = event.target.closest(".saved-remove-btn");
 
